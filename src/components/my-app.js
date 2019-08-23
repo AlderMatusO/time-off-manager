@@ -53,20 +53,27 @@ class MyApp extends connect(store)(LitElement) {
 
           --app-drawer-width: 256px;
 
-          --app-primary-color: #E91E63;
-          --app-secondary-color: #293237;
+          --app-primary-color: #4FC8ED;
+          --app-secondary-color: #FFDD30;
+          --app-header-color: #FF675C;
+          --app-nst-skyblue: #4FC8ED;
+          --app-nst-paleblue: #00CFB5;
           --app-dark-text-color: var(--app-secondary-color);
           --app-light-text-color: white;
           --app-section-even-color: #f7f7f7;
           --app-section-odd-color: white;
 
-          --app-header-background-color: white;
-          --app-header-text-color: var(--app-dark-text-color);
-          --app-header-selected-color: var(--app-primary-color);
+          --app-header-background-color: var(--app-header-color);
+          --app-header-text-color: var(--app-light-text-color);
+          --app-header-selected-color: var(--app-secondary-color);
 
           --app-drawer-background-color: var(--app-secondary-color);
           --app-drawer-text-color: var(--app-light-text-color);
           --app-drawer-selected-color: #78909C;
+        }
+
+        app-drawer {
+          z-index: 2;
         }
 
         app-header {
@@ -85,9 +92,8 @@ class MyApp extends connect(store)(LitElement) {
         }
 
         [main-title] {
-          font-family: 'Pacifico';
-          text-transform: lowercase;
-          font-size: 30px;
+          font-family: 'Helvetica Neue Bold';
+          font-size: 18px;
           /* In the narrow layout, the toolbar is offset by the width of the
           drawer button, and the text looks not centered. Add a padding to
           match that button */
@@ -185,6 +191,7 @@ class MyApp extends connect(store)(LitElement) {
           need to offset the title */
           [main-title] {
             padding-right: 0px;
+            font-size: 25px;
           }
         }
       `
@@ -203,7 +210,7 @@ class MyApp extends connect(store)(LitElement) {
 
         <!-- This gets hidden on a small screen-->
         <nav class="toolbar-list">
-          <a ?selected="${this._page === 'view1'}" href="/view1">View One</a>
+          <a ?selected="${this._page === 'request-time-off'}" href="/request-time-off">Request</a>
           <a ?selected="${this._page === 'view2'}" href="/view2">View Two</a>
           <a ?selected="${this._page === 'view3'}" href="/view3">View Three</a>
         </nav>
@@ -214,7 +221,7 @@ class MyApp extends connect(store)(LitElement) {
           .opened="${this._drawerOpened}"
           @opened-changed="${this._drawerOpenedChanged}">
         <nav class="drawer-list">
-          <a ?selected="${this._page === 'view1'}" href="/view1">View One</a>
+          <a ?selected="${this._page === 'request-time-off'}" href="/request-time-off">Request</a>
           <a ?selected="${this._page === 'view2'}" href="/view2">View Two</a>
           <a ?selected="${this._page === 'view3'}" href="/view3">View Three</a>
         </nav>
@@ -222,14 +229,14 @@ class MyApp extends connect(store)(LitElement) {
 
       <!-- Main content -->
       <main role="main" class="main-content">
-        <my-view1 class="page" ?active="${this._page === 'view1'}"></my-view1>
+        <request-time-off class="page" ?active="${this._page === 'request-time-off'}"></my-view1>
         <my-view2 class="page" ?active="${this._page === 'view2'}"></my-view2>
         <my-view3 class="page" ?active="${this._page === 'view3'}"></my-view3>
         <my-view404 class="page" ?active="${this._page === 'view404'}"></my-view404>
       </main>
 
       <footer>
-        <p>Made with &hearts; by the Polymer team.</p>
+        <p>All rights reserved...</p>
       </footer>
 
       <snack-bar ?active="${this._snackbarOpened}">
@@ -254,7 +261,7 @@ class MyApp extends connect(store)(LitElement) {
 
   updated(changedProps) {
     if (changedProps.has('_page')) {
-      const pageTitle = this.appTitle + ' - ' + this._page;
+      const pageTitle = 'NST/TOM - ' + this._page;
       updateMetadata({
         title: pageTitle,
         description: pageTitle

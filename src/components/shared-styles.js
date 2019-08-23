@@ -11,7 +11,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 import { css } from 'lit-element';
 
 export const SharedStyles = css`
-  :host {
+:host {
     display: block;
     box-sizing: border-box;
   }
@@ -54,5 +54,54 @@ export const SharedStyles = css`
     color: var(--app-light-text-color);
     font-size: 30px;
     line-height: 64px;
+  }
+  
+  .card-content #employee-image img {
+    max-width: 60%;
+  }
+
+  .card-content > * {
+    display: inline-block;
+  }
+
+  .employee-data {
+    max-width: 50%;
+  }
+
+  .employee-data #employee-name {
+    font-size: 18px;
+    color: black;
+  }
+
+  .employee-data #employee-position {
+    font-size: 12px;
+    color: gray;
+  }
+  
+  paper-button {
+    font-size: 13px;
+    border-style: solid;
+    border-width: 0.6px;
+    border-color: #ada593;
+  }
+
+  paper-button.toggle.active {
+    font-weight: bold;
+    background: repeating-linear-gradient(
+      45deg,
+      #4FC8ED,
+      #4FC8ED 10px,
+      #2a96b8 10px,
+      #2a96b8 20px
+    );
+    color: white;
+    border-style: none;
+  }
+
+  paper-button.submit_btn {
+    font-weight: bold;
+    color: white;
+    background-color: #FF675C;
+    border-style: none;
   }
 `;
