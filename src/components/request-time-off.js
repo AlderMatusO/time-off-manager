@@ -81,25 +81,47 @@ class RequestTimeOff extends PageViewElement {
   constructor() {
     // Always call super() first
     super();
+
     this.events_def = {
       PTO: {color: "#9d03fc", min_date: "today", max_date:"29-Aug-2020", restrictWeekdays: true, validation: this.validate_pto, scope: this},
       Vacations: {color: "#50e657", min_date: "today", max_date:"29-December-2020", restrictWeekdays: true, validation: this.validate_vacation, scope: this}
     };
+    
+    //output
+    this.server = {address: "https://localhost", port: "5001", requests: { "time-off-req": "api/request", employee: "{employee_id}"} };
+    this.request = {type:"", url:"", params:""};
+    this.enable_submit = false;
     //input
     this.employee = {
       id : "aldo.matus@nearshoretechnology.com",
-      name: "Aldo Rafael Matus Angulo",
-      position: "Developer",
+      name: "",
+      position: "",
       image: "images/unknown.png",
       availableDays: {
-        pto: {number: 3, active: true},
-        vacations: {number: 10, active: false}
+        pto: {number: 0, active: true},
+        vacations: {number: 0, active: false}
       }
     };
-    //output
-    this.server = {address: "https://localhost", port: "44352", route: "api/request" };
-    this.request = {type:"", url:"", params:""};
-    this.enable_submit = false;
+    
+    fetch(this.get_url("employee"),
+    {
+      method: 'get',
+      headers: {
+        "Content-Type": "application/json"
+      }
+    })
+    .then(response => {
+      return response.json();
+    })
+    .then(value => {
+      this.employee = value;
+      this.employee.image = "images/unknown.png",
+      this.employee.availableDays.pto.active = true;
+      this.employee.availableDays.vacations.active = false;
+    })
+    .catch(_ => console.log("Something went wrong"));
+
+    
   }
 
   firstUpdated(changedProp) {
@@ -147,21 +169,23 @@ class RequestTimeOff extends PageViewElement {
     //
     let _req_dates = this.calendar.getValues();
     let params = {EmployeeId: this.employee.id, Pto: _req_dates['PTO'], Vacations: _req_dates['Vacations']};
-    
-    fetch(this.get_url(), {
+    let req_type = "time-off-req"
+    fetch(this.get_url(req_type), {
       method: 'post',
-      mode: 'no-cors',
       body: JSON.stringify(params),
       headers: {
         'Content-Type': 'application/json'
       }
     })
-    .then(response => console.log(response.body))
+    .then(response => {
+      return response.text();
+    })
+    .then(value => {console.log(value);})
     .catch(_ => console.log("Something went wrong"));
   }
 
-  get_url() {
-    return this.server.address + ":" +this.server.port + "/" + this.server.route;
+  get_url(req_type) {
+    return this.server.address + ":" +this.server.port + "/" + this.server.requests[req_type].replace("{employee_id}", this.employee.id);
   }
 
   validate_pto(_time, evts_obj) {
