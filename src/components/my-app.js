@@ -15,6 +15,7 @@ import { installMediaQueryWatcher } from 'pwa-helpers/media-query.js';
 import { installOfflineWatcher } from 'pwa-helpers/network.js';
 import { installRouter } from 'pwa-helpers/router.js';
 import { updateMetadata } from 'pwa-helpers/metadata.js';
+import '@polymer/iron-dropdown/iron-dropdown.js';
 
 // This element is connected to the Redux store.
 import { store } from '../store.js';
@@ -23,7 +24,9 @@ import { store } from '../store.js';
 import {
   navigate,
   updateOffline,
-  updateDrawerState
+  updateDrawerState,
+  checkForUser,
+  setUser
 } from '../actions/app.js';
 
 // These are the elements needed by this element.
@@ -41,7 +44,8 @@ class MyApp extends connect(store)(LitElement) {
       _page: { type: String },
       _drawerOpened: { type: Boolean },
       _snackbarOpened: { type: Boolean },
-      _offline: { type: Boolean }
+      _offline: { type: Boolean },
+      _loggedUsr: { type: Object }
     };
   }
 
@@ -54,17 +58,17 @@ class MyApp extends connect(store)(LitElement) {
           --app-drawer-width: 256px;
 
           --app-primary-color: #4FC8ED;
-          --app-secondary-color: #FFDD30;
-          --app-header-color: #FF675C;
+          --app-secondary-color: #31BCAC;
+          --app-header-color: #ECEBEB;
           --app-nst-skyblue: #4FC8ED;
           --app-nst-paleblue: #00CFB5;
-          --app-dark-text-color: var(--app-secondary-color);
+          --app-dark-text-color: #8A8B8B;
           --app-light-text-color: white;
           --app-section-even-color: #f7f7f7;
           --app-section-odd-color: white;
 
           --app-header-background-color: var(--app-header-color);
-          --app-header-text-color: var(--app-light-text-color);
+          --app-header-text-color: var(--app-dark-text-color);
           --app-header-selected-color: var(--app-secondary-color);
 
           --app-drawer-background-color: var(--app-secondary-color);
@@ -77,6 +81,7 @@ class MyApp extends connect(store)(LitElement) {
         }
 
         app-header {
+          font-family: 'ITC Avant Garde Gothic';
           position: fixed;
           top: 0;
           left: 0;
@@ -92,29 +97,24 @@ class MyApp extends connect(store)(LitElement) {
         }
 
         [main-title] {
-          font-family: 'Helvetica Neue Bold';
-          font-size: 18px;
+          font-family: 'ITC Avant Garde Gothic LT';
+          font-size: 10px;
           /* In the narrow layout, the toolbar is offset by the width of the
           drawer button, and the text looks not centered. Add a padding to
           match that button */
           padding-right: 44px;
         }
 
-        .toolbar-list {
-          display: none;
+        .navbar-nav > .active a {
+          color: var(--app-secondary-color) !important;
         }
 
-        .toolbar-list > a {
-          display: inline-block;
-          color: var(--app-header-text-color);
-          text-decoration: none;
-          line-height: 30px;
-          padding: 4px 24px;
-        }
-
-        .toolbar-list > a[selected] {
-          color: var(--app-header-selected-color);
-          border-bottom: 4px solid var(--app-header-selected-color);
+        iron-dropdown > div.list-group {
+          font-size: 14px;
+          -webkit-user-select: none; /* Safari */        
+          -moz-user-select: none; /* Firefox */
+          -ms-user-select: none; /* IE10+/Edge */
+          user-select: none; /* Standard */
         }
 
         .menu-btn {
@@ -165,13 +165,6 @@ class MyApp extends connect(store)(LitElement) {
           display: block;
         }
 
-        footer {
-          padding: 24px;
-          background: var(--app-drawer-background-color);
-          color: var(--app-drawer-text-color);
-          text-align: center;
-        }
-
         /* Wide layout: when the viewport width is bigger than 460px, layout
         changes to a wide layout */
         @media (min-width: 460px) {
@@ -201,19 +194,59 @@ class MyApp extends connect(store)(LitElement) {
   render() {
     // Anything that's related to rendering should be done in here.
     return html`
+    <!-- Load Bootstrap -->
+    <link rel="stylesheet" href="./node_modules/bootstrap/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="fonts/font-awesome-4.7.0/css/font-awesome.min.css">
+    
+    ${this._loggedUsr != null? html `
       <!-- Header -->
       <app-header condenses reveals effects="waterfall">
-        <app-toolbar class="toolbar-top">
+        <!-- <app-toolbar class="toolbar-top">
           <button class="menu-btn" title="Menu" @click="${this._menuButtonClicked}">${menuIcon}</button>
-          <div main-title>${this.appTitle}</div>
-        </app-toolbar>
-
-        <!-- This gets hidden on a small screen-->
-        <nav class="toolbar-list">
-          <a ?selected="${this._page === 'request-time-off'}" href="/request-time-off">Request</a>
-          <!-- <a ?selected="${this._page === 'view2'}" href="/view2">View Two</a>
-          <a ?selected="${this._page === 'view3'}" href="/view3">View Three</a> -->
+          
+        </app-toolbar> -->
+        <nav class="navbar navbar-expand-lg navbar-light bg-light row justify-content-between">
+          <embed src="/images/manifest/NSTLogo.svg" width="130" class="col-2"/>
+          <div class="col-3" main-title>${this.appTitle}</div>
+          <div class="collapse navbar-collapse col-5">
+            <ul class="navbar-nav text-uppercase font-weight-bold">
+              <li class="nav-item ${this._page === 'request-time-off'? 'active' : ''}" >
+                <a class="nav-link" href="/request-time-off">Request</a>
+              </li>
+              <li class="nav-item ${this._page === 'requests-history'? 'active' : ''}" >
+                <a class="nav-link" href="/requests-history">Request History</a>
+              </li>
+              <li class="nav-item">
+                <!-- <div class="dropdown">
+                  <button class="btn btn-light btn-sm dropdown-toggle" type="button" id="user_actions" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    <img src="${this._loggedUsr.image}" width="25"> ${this._loggedUsr.name}
+                  </button>
+                  <div class="dropdown-menu" aria-labelledby="user_actions">
+                    <a class="dropdown-item">Action</a>
+                    <a class="dropdown-item">Another action</a>
+                    <a class="dropdown-item"><span class="fa fa-sign-out fa-sm">Log Out</a>
+                  </div>
+                </div> -->
+                <button class="btn btn-light btn-sm dropdown-toggle" type="button" id="user_actions" @click="${this._openDropdown}">
+                  <img src="${this._loggedUsr.image}" width="25"> ${this._loggedUsr.name}
+                </button>
+                <iron-dropdown id="dropdown" class="text-capitalize" no-overlap>
+                  <div slot="dropdown-content" class="list-group text-left">
+                    <a class="list-group-item list-group-item-action"><span class="fa fa-user-circle"></span> Account</a>
+                    <a class="list-group-item list-group-item-action"><span class="fa fa-envelope"></span> Notification</a>
+                    <a class="list-group-item list-group-item-action" @click="${this._logOut}"><span class="fa fa-sign-out"></span> Log Out</a>
+                  </div>
+                </iron-dropdown>
+              </li>
+            </ul>
+          </div>
         </nav>
+        
+        <!-- This gets hidden on a small screen-->
+        <!--<nav class="toolbar-list text-uppercase">
+          <a ?selected="${this._page === 'request-time-off'}" href="/request-time-off">Request</a>
+          <a ?selected="${this._page === 'requests-history'}" href="/requests-history">Requests History</a>
+        </nav>-->
       </app-header>
 
       <!-- Drawer content -->
@@ -222,22 +255,18 @@ class MyApp extends connect(store)(LitElement) {
           @opened-changed="${this._drawerOpenedChanged}">
         <nav class="drawer-list">
           <a ?selected="${this._page === 'request-time-off'}" href="/request-time-off">Request</a>
-          <!-- <a ?selected="${this._page === 'view2'}" href="/view2">View Two</a>
-          <a ?selected="${this._page === 'view3'}" href="/view3">View Three</a> -->
+          <a ?selected="${this._page === 'requests-history'}" href="/requests-history">Requests History</a>
         </nav>
       </app-drawer>
+      ` : html ``}
 
       <!-- Main content -->
       <main role="main" class="main-content">
-        <request-time-off class="page" ?active="${this._page === 'request-time-off'}"></my-view1>
-        <!-- <my-view2 class="page" ?active="${this._page === 'view2'}"></my-view2>
-        <my-view3 class="page" ?active="${this._page === 'view3'}"></my-view3> -->
+        <start-page class="page" ?active="${this._page === 'start-page'}"></start-page>
+        <request-time-off class="page" ?active="${this._page === 'request-time-off'}"></request-time-off>
+        <requests-history class="page" ?active="${this._page === 'requests-history'}"></requests-history>
         <my-view404 class="page" ?active="${this._page === 'view404'}"></my-view404>
       </main>
-
-      <footer>
-        <p>All rights reserved...</p>
-      </footer>
 
       <snack-bar ?active="${this._snackbarOpened}">
         You are now ${this._offline ? 'offline' : 'online'}.
@@ -252,7 +281,12 @@ class MyApp extends connect(store)(LitElement) {
     setPassiveTouchGestures(true);
   }
 
+  connectedCallback() {
+    super.connectedCallback();
+  }
+
   firstUpdated() {
+    store.dispatch(checkForUser);
     installRouter((location) => store.dispatch(navigate(decodeURIComponent(location.pathname))));
     installOfflineWatcher((offline) => store.dispatch(updateOffline(offline)));
     installMediaQueryWatcher(`(min-width: 460px)`,
@@ -261,13 +295,23 @@ class MyApp extends connect(store)(LitElement) {
 
   updated(changedProps) {
     if (changedProps.has('_page')) {
-      const pageTitle = 'NST/TOM - ' + this._page;
+      const pageTitle = 'Abscence Control - ' + this._page;
       updateMetadata({
         title: pageTitle,
         description: pageTitle
         // This object also takes an image property, that points to an img src.
       });
     }
+  }
+  _openDropdown() {
+    let dropdown = this.shadowRoot.querySelector("iron-dropdown");
+    if(dropdown != null)
+      dropdown.open();
+  }
+
+  _logOut() {
+    store.dispatch(setUser(null));
+    store.dispatch(navigate(decodeURIComponent("/")));
   }
 
   _menuButtonClicked() {
@@ -283,6 +327,7 @@ class MyApp extends connect(store)(LitElement) {
     this._offline = state.app.offline;
     this._snackbarOpened = state.app.snackbarOpened;
     this._drawerOpened = state.app.drawerOpened;
+    this._loggedUsr = state.app.loggedUsr;
   }
 }
 

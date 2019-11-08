@@ -10,6 +10,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 import { html } from 'lit-element';
 import { PageViewElement } from './page-view-element.js';
+import { connect } from 'pwa-helpers/connect-mixin.js';
+import { store } from '../store.js';
 import '@polymer/paper-card/paper-card.js';
 import '@polymer/paper-button/paper-button.js';
 import '/node_modules/mte-calendar/mte-calendar.js';
@@ -17,7 +19,7 @@ import '/node_modules/mte-calendar/mte-calendar.js';
 // These are the shared styles needed by this element.
 import { SharedStyles } from './shared-styles.js';
 
-class RequestTimeOff extends PageViewElement {
+class RequestTimeOff extends connect(store)(PageViewElement) {
   static get styles() {
     return [
       SharedStyles
@@ -28,13 +30,14 @@ class RequestTimeOff extends PageViewElement {
     return html`
       <section>
         <div>
+          <!--
           <iron-ajax
             auto
-            url="${this.request.url}"
-            params="${this.request.params}"
+            url="this.request.url"
+            params="this.request.params"
             handle-as="json"
             @response="_handleResponse"
-          ></iron-ajax>
+          ></iron-ajax> -->
           <paper-card>
             <div class="card-content">
               <div id="employee-image">
@@ -51,8 +54,8 @@ class RequestTimeOff extends PageViewElement {
                   <paper-button id="vacations-btn" class="toggle ${this.employee.availableDays.vacations.active? 'active' : ''}" @tap="${this._toggleSelection}">
                     Vacations: <div id="employee-vacation-days">${this.employee.availableDays.vacations.number}</div>
                   </paper-button>
-                  <paper-button class="submit_btn" style="display: ${this.enable_submit? 'inline-flex' :  'none'}" @tap="${this._submit}">
-                   Submit
+                  <paper-button class="submit-btn" style="display: ${this.enable_submit? 'inline-flex' :  'none'}" @tap="${this._submit}">
+                    Submit
                   </paper-button>
                 </div>
               </div>
@@ -88,39 +91,32 @@ class RequestTimeOff extends PageViewElement {
     };
     
     //output
-    this.server = {address: "https://localhost", port: "5001", requests: { "time-off-req": "api/request", employee: "{employee_id}"} };
-    this.request = {type:"", url:"", params:""};
-    this.enable_submit = false;
-    //input
-    this.employee = {
-      id : "aldo.matus@nearshoretechnology.com",
-      name: "",
-      position: "",
-      image: "images/unknown.png",
-      availableDays: {
-        pto: {number: 0, active: true},
-        vacations: {number: 0, active: false}
-      }
-    };
-    
-    fetch(this.get_url("employee"),
-    {
-      method: 'get',
-      headers: {
-        "Content-Type": "application/json"
-      }
-    })
-    .then(response => {
-      return response.json();
-    })
-    .then(value => {
-      this.employee = value;
-      this.employee.image = "images/unknown.png",
-      this.employee.availableDays.pto.active = true;
-      this.employee.availableDays.vacations.active = false;
-    })
-    .catch(_ => console.log("Something went wrong"));
+    // this.server = {address: "https://vacations-253817.appspot.com", port: "", requests: { "time-off-req": "api/request", employee: "{employee_id}"} };
+    // this.request = {type:"", url:"", params:""};
+    // this.enable_submit = false;
 
+    //input
+    // this.employee = {
+    //   id : "john.doe@nearshoretechnology.com"
+    // };
+  
+    // fetch(this.get_url("employee"),
+    // {
+    //   method: 'get',
+    //   headers: {
+    //     "Content-Type": "application/json"
+    //   }
+    // })
+    // .then(response => {
+    //   return response.json();
+    // })
+    // .then(value => {
+      //this.employee = value;
+      // this.employee.image = "images/unknown.png",
+      // this.employee.availableDays.pto.active = true;
+      // this.employee.availableDays.vacations.active = false;
+    // })
+    // .catch(_ => console.log("Something went wrong"));
     
   }
 
@@ -207,6 +203,12 @@ class RequestTimeOff extends PageViewElement {
     return true;
   }
 
+  stateChanged(state) {
+    this.employee = state.app.loggedUsr;
+    if(this.employee != null) {
+      this.employee.availableDays = { pto: { number: 3, active: true }, vacations: { number: 10, active: false } };
+    }
+  }
   
 }
 

@@ -1,6 +1,6 @@
 {
-  "name": "NST Time-Off Manager",
-  "short_name": "NST/TOM",
+  "name": "NST Abscence Control",
+  "short_name": "Abscence Control",
   "description": "Vacation and Time-off requests",
   "start_url": "/",
   "display": "standalone",

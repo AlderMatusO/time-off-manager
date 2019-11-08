@@ -12,9 +12,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 <html lang="en">
   <head>
     <meta charset="utf-8">
-    <title>NST/Time-Off Manager</title>
+    <title>Abscence Control</title>
     <meta name="generator" content="PWA Starter Kit">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <meta name="description" content="Vacation and Time-off requests">
 
     <!--
@@ -26,6 +26,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       b) Use the `--base-path` command-line option for `polymer build`.
     -->
     <base href="/">
+    
 
     <link rel="icon" href="images/icon.png">
 
@@ -63,6 +64,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     <meta property="og:site_name" content="my-app">
     <meta property="og:image" content="images/manifest/icon-144x144.png" />
 
+    
+    <link rel="stylesheet" href="fonts/font-awesome-4.7.0/css/font-awesome.min.css">
+    <script src="./node_modules/jquery/dist/jquery.min.js"></script>
+    <script src="./node_modules/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <!-- Performance tip: hint to the browser to start the handshake for the fonts site -->
     <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin>
     <script>
@@ -79,12 +84,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       // https://github.com/reactjs/redux/issues/2907
       window.process = { env: { NODE_ENV: 'production' } };
     </script>
-
     <!-- Add any global styles for body, document, etc. -->
     <style>
       @font-face {
         font-family: 'Helvetica Neue Bold';
-        font-style: normal;
+        font-style: bold;
         font-weight: 400;
         src: local('Helvetica Neue'), url('fonts/HelveticaNeue-Bold.otf') format('opentype');
         /* The browser draws the text immediately in the fallback font if the font
@@ -100,6 +104,20 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         src: local('Helvetica Neue'), url('fonts/HelveticaNeue.otf') format('opentype');
         font-display: swap;
       }
+      @font-face {
+        font-family: 'ITC Avant Garde Gothic';
+        font-style: normal;
+        font-weight: 400;
+        src: local('ITC Avant Garde'), url('fonts/ITC Avant Garde Gothic Medium.otf') format('opentype');
+        font-display: swap;
+      }
+      @font-face {
+        font-family: 'ITC Avant Garde Gothic Bold';
+        font-style: bold;
+        font-weight: 400;
+        src: local('ITC Avant Garde LT'), url('fonts/ITC Avant Garde Gothic LT Bold.otf') format('opentype');
+        font-display: swap;
+      }
       body {
         margin: 0;
         /* This is a font-stack that tries to use the system-default sans-serifs first */
@@ -111,7 +129,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     </style>
   </head>
   <body>
-    <my-app appTitle="NST\Time-Off Manager"></my-app>
+    <my-app appTitle="Abscence Control"></my-app>
     <noscript>
       Please enable JavaScript to view this website.
     </noscript>

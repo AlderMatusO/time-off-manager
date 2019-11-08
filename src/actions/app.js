@@ -13,10 +13,12 @@ export const UPDATE_OFFLINE = 'UPDATE_OFFLINE';
 export const UPDATE_DRAWER_STATE = 'UPDATE_DRAWER_STATE';
 export const OPEN_SNACKBAR = 'OPEN_SNACKBAR';
 export const CLOSE_SNACKBAR = 'CLOSE_SNACKBAR';
+export const SET_USER = 'SET_USER';
 
-export const navigate = (path) => (dispatch) => {
+export const navigate = (path) => (dispatch, getState) => {
+  const state = getState();
   // Extract the page name from path.
-  const page = path === '/' ? 'request-time-off' : path.slice(1);
+  const page = state.app.loggedUsr === null? 'start-page' : (path === '/' ? 'request-time-off' : path.slice(1));
 
   // Any other info you might want to extract from the path (like page type),
   // you can do here
@@ -28,17 +30,20 @@ export const navigate = (path) => (dispatch) => {
 
 const loadPage = (page) => (dispatch) => {
   switch(page) {
+    case 'start-page':
+      import('../components/start-page.js');
+      break;
     case 'request-time-off':
       import('../components/request-time-off.js').then((module) => {
         // Put code in here that you want to run every time when
-        // navigating to view1 after my-view1.js is loaded.
+        // navigating to request-time-off after request-time-off.js is loaded.
       });
       break;
-    case 'view2':
-      import('../components/my-view2.js');
+    case 'requests-history':
+      import('../components/requests-history.js');
       break;
     case 'view3':
-      import('../components/my-view3.js');
+      import('../components/access-manager.js/index.js');
       break;
     default:
       page = 'view404';
@@ -81,5 +86,23 @@ export const updateDrawerState = (opened) => {
   return {
     type: UPDATE_DRAWER_STATE,
     opened
+  };
+};
+
+export const checkForUser = (dispatch) => {
+  let user = JSON.parse(localStorage.getItem("user"));
+
+  if(user != null) {
+    // Also must check session's expiry
+    dispatch(setUser(user));
+  }
+
+};
+
+export const setUser = (user) => {
+  localStorage.setItem("user", JSON.stringify(user));
+  return {
+    type: SET_USER,
+    user
   };
 };

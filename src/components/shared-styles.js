@@ -104,4 +104,19 @@ export const SharedStyles = css`
     background-color: #FF675C;
     border-style: none;
   }
+
+  .btn-primary {
+    border-color: #FF675C;
+    background-color: #FF675C;
+  }
+  
+  h1 {
+    font-family: 'ITC Avant Garde Gothic Bold';
+    color: #d7d6d5;
+  }
+
+  h2,h3 {
+    font-family: 'ITC Avant Garde Gothic LT';
+    color: #6c757d;
+  }
 `;

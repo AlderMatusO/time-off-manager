@@ -13,7 +13,8 @@ import {
   UPDATE_OFFLINE,
   OPEN_SNACKBAR,
   CLOSE_SNACKBAR,
-  UPDATE_DRAWER_STATE
+  UPDATE_DRAWER_STATE,
+  SET_USER
 } from '../actions/app.js';
 
 const INITIAL_STATE = {
@@ -21,6 +22,7 @@ const INITIAL_STATE = {
   offline: false,
   drawerOpened: false,
   snackbarOpened: false,
+  loggedUsr: null,
 };
 
 const app = (state = INITIAL_STATE, action) => {
@@ -50,6 +52,11 @@ const app = (state = INITIAL_STATE, action) => {
         ...state,
         snackbarOpened: false
       };
+      case SET_USER:
+        return {
+          ...state,
+          loggedUsr: action.user
+        };
     default:
       return state;
   }
