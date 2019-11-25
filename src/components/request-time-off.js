@@ -27,9 +27,11 @@ class RequestTimeOff extends connect(store)(PageViewElement) {
   }
 
   render() {
-    return html`
+    return html` 
+      <link rel="stylesheet" href="${this.baseURI}/node_modules/bootstrap/dist/css/bootstrap.min.css">
+      <link rel="stylesheet" href="${this.baseURI}/fonts/font-awesome-4.7.0/css/font-awesome.min.css">
+
       <section>
-        <div>
           <!--
           <iron-ajax
             auto
@@ -38,34 +40,30 @@ class RequestTimeOff extends connect(store)(PageViewElement) {
             handle-as="json"
             @response="_handleResponse"
           ></iron-ajax> -->
-          <paper-card>
-            <div class="card-content">
-              <div id="employee-image">
-                <img .src="${this.employee.image}">
-              </div>
-              <div class="employee-data">
-                <div id="employee-name">${this.employee.name}</div>
-                <div id="employee-position">${this.employee.position}</div>
-                <p>According to our register your AVAILABLE days are:</p>
-                <div id="employee-actions">
-                  <paper-button id="pto-btn" class="toggle ${this.employee.availableDays.pto.active? 'active' : ''}" @tap="${this._toggleSelection}">
-                    PTO: <div id="employee-pto-days">${this.employee.availableDays.pto.number}</div>
-                  </paper-button>
-                  <paper-button id="vacations-btn" class="toggle ${this.employee.availableDays.vacations.active? 'active' : ''}" @tap="${this._toggleSelection}">
-                    Vacations: <div id="employee-vacation-days">${this.employee.availableDays.vacations.number}</div>
-                  </paper-button>
-                  <paper-button class="submit-btn" style="display: ${this.enable_submit? 'inline-flex' :  'none'}" @tap="${this._submit}">
-                    Submit
-                  </paper-button>
+        <div class="container">
+          <div class="row">
+            <div class="col col-md">
+              <div class="card mb-3 shadow p-3 mb-5 bg-white rounded" style="max-width: 540px;">
+                <div class="card-body">
+                  <h5 class="card-title">${this.employee.name}</h5>
+                  <h6 id="employee-position">${this.employee.position}</h6>
+                  <p class="card-text">According to our register your AVAILABLE days are:</p>
+                  <div id="employee-actions">
+                    <div class="btn-group" role="group">
+                      <button id="pto-btn" type="button" class="btn btn-light border-0 ${this.employee.availableDays.pto.active? 'active' : ''}" @tap="${this._toggleSelection}">PTO <span id="badge-pto" class="badge badge-light badge-pill text-monospace">${this.employee.availableDays.pto.number}</span></button>
+                      <button id="vacations-btn" type="button" class="btn btn-light border-0 ${this.employee.availableDays.vacations.active? 'active' : ''}" @tap="${this._toggleSelection}">Vacations <span id="badge-vacations" class="badge badge-light badge-pill text-monospace">${this.employee.availableDays.vacations.number}</span></button>
+                    </div>
+                    <button class="btn btn-primary" style="display: ${this.enable_submit? 'inline-flex' :  'none'}" @tap="${this._submit}">
+                      Submit
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
-          </paper-card>
-        </div>
-      </section>
-      <section>
-        <div>
-          <mte-calendar .evt_types="${this.events_def}" @before_date_attached="${this._beforeDateSelected}" @date_detached="${this._dateDeselected}"></mte-calendar>
+            <div class="col col-md">
+              <mte-calendar style="max-width: 540px;" .evt_types="${this.events_def}" @before_date_attached="${this._beforeDateSelected}" @date_detached="${this._dateDeselected}"></mte-calendar>
+            </div>
+          </div>
         </div>
       </section>
     `;
@@ -86,8 +84,8 @@ class RequestTimeOff extends connect(store)(PageViewElement) {
     super();
 
     this.events_def = {
-      PTO: {color: "#9d03fc", min_date: "today", max_date:"29-Aug-2020", restrictWeekdays: true, validation: this.validate_pto, scope: this},
-      Vacations: {color: "#50e657", min_date: "today", max_date:"29-December-2020", restrictWeekdays: true, validation: this.validate_vacation, scope: this}
+      PTO: {color: "#00CFB5", min_date: "today", max_date:"29-Aug-2020", restrictWeekdays: true, validation: this.validate_pto, indicators: false, scope: this},
+      Vacations: {color: "#FFDD30", min_date: "today", max_date:"29-December-2020", restrictWeekdays: true, validation: this.validate_vacation, indicators: false, scope: this}
     };
     
     //output

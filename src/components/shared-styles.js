@@ -105,18 +105,35 @@ export const SharedStyles = css`
     border-style: none;
   }
 
+  .btn-group > .active {
+    color: white !important;
+    font-weight: bold;
+  }
+
+  #pto-btn.active{
+    background-color: #00CFB5;
+  }
+
+  #vacations-btn.active {
+    background-color: #FFDD30;
+  }
+
   .btn-primary {
     border-color: #FF675C;
     background-color: #FF675C;
   }
   
-  h1 {
+  h1,h5 {
     font-family: 'ITC Avant Garde Gothic Bold';
     color: #d7d6d5;
   }
 
-  h2,h3 {
+  h2,h3,h6 {
     font-family: 'ITC Avant Garde Gothic LT';
     color: #6c757d;
+  }
+
+  .btn-light:not(:disabled):not(.disabled).active:focus {
+    box-shadow: none;
   }
 `;

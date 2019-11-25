@@ -16,7 +16,7 @@ import { installOfflineWatcher } from 'pwa-helpers/network.js';
 import { installRouter } from 'pwa-helpers/router.js';
 import { updateMetadata } from 'pwa-helpers/metadata.js';
 import '@polymer/iron-dropdown/iron-dropdown.js';
-
+import '@polymer/iron-collapse/iron-collapse.js';
 // This element is connected to the Redux store.
 import { store } from '../store.js';
 
@@ -25,6 +25,7 @@ import {
   navigate,
   updateOffline,
   updateDrawerState,
+  updateAccordionState,
   checkForUser,
   setUser
 } from '../actions/app.js';
@@ -41,6 +42,7 @@ class MyApp extends connect(store)(LitElement) {
   static get properties() {
     return {
       appTitle: { type: String },
+      _usrAccordionOpened: { type: Boolean },
       _page: { type: String },
       _drawerOpened: { type: Boolean },
       _snackbarOpened: { type: Boolean },
@@ -55,7 +57,7 @@ class MyApp extends connect(store)(LitElement) {
         :host {
           display: block;
 
-          --app-drawer-width: 256px;
+          --app-drawer-width: 320px;
 
           --app-primary-color: #4FC8ED;
           --app-secondary-color: #31BCAC;
@@ -80,9 +82,8 @@ class MyApp extends connect(store)(LitElement) {
           z-index: 2;
         }
 
-        app-header {
+        .navbar {
           font-family: 'ITC Avant Garde Gothic';
-          position: fixed;
           top: 0;
           left: 0;
           width: 100%;
@@ -92,29 +93,63 @@ class MyApp extends connect(store)(LitElement) {
           border-bottom: 1px solid #eee;
         }
 
-        .toolbar-top {
-          background-color: var(--app-header-background-color);
-        }
-
         [main-title] {
           font-family: 'ITC Avant Garde Gothic LT';
-          font-size: 10px;
+          font-size: 20px;
           /* In the narrow layout, the toolbar is offset by the width of the
           drawer button, and the text looks not centered. Add a padding to
           match that button */
-          padding-right: 44px;
+          display: block;
+        }
+
+        li.nav-item > a.nav-link, .dropdown-toggle {
+          font-size: 10px;
+        }
+
+        .user_actions img {
+          border-radius: 50%;
         }
 
         .navbar-nav > .active a {
           color: var(--app-secondary-color) !important;
         }
 
-        iron-dropdown > div.list-group {
-          font-size: 14px;
+        .navbar-brand {
+          display: none;
+        }
+
+        .navbar-toggler {
+          margin-left: 20px;
+        }
+
+        .drawer-list > a.user_actions {
+          font-size: 12px;
+          color: white !important;
+        }
+
+        a, div.list-group-item {
           -webkit-user-select: none; /* Safari */        
           -moz-user-select: none; /* Firefox */
           -ms-user-select: none; /* IE10+/Edge */
           user-select: none; /* Standard */
+        }
+
+        a.list-group-item {
+          font-size: 14px;
+        }
+        
+        div.list-group-item {
+          font-size: 13px;
+        }
+
+        div.collapse-content > div.list-group > div.list-group-item {
+          background-color: var(--app-drawer-background-color);
+          color: white;
+          border: none;
+        }
+
+        div.collapse-content > div.list-group > div.list-group-item:last-child {
+          border-bottom: 1px solid #eee;
         }
 
         .menu-btn {
@@ -130,7 +165,7 @@ class MyApp extends connect(store)(LitElement) {
           box-sizing: border-box;
           width: 100%;
           height: 100%;
-          padding: 24px;
+          padding: 20px;
           background: var(--app-drawer-background-color);
           position: relative;
         }
@@ -153,8 +188,8 @@ class MyApp extends connect(store)(LitElement) {
         }
 
         .main-content {
-          padding-top: 64px;
-          min-height: 100vh;
+          padding-top: 35px;
+          min-height: 80vh;
         }
 
         .page {
@@ -167,24 +202,36 @@ class MyApp extends connect(store)(LitElement) {
 
         /* Wide layout: when the viewport width is bigger than 460px, layout
         changes to a wide layout */
-        @media (min-width: 460px) {
-          .toolbar-list {
-            display: block;
+        @media (min-width: 992px) {
+          .navbar {
+            display: flex;
+          }
+
+          li.nav-item > a.nav-link, .dropdown-toggle {
+            font-size: 14px;
           }
 
           .menu-btn {
             display: none;
           }
 
-          .main-content {
-            padding-top: 107px;
+          [main-title] {
+            display: none;
+          }
+          
+          .navbar-expand-lg .navbar-collapse {
+              display: -ms-flexbox!important;
+              display: flex!important;
+              -ms-flex-preferred-size: auto;
+              flex-basis: auto;
           }
 
-          /* The drawer button isn't shown in the wide layout, so we don't
-          need to offset the title */
-          [main-title] {
-            padding-right: 0px;
-            font-size: 25px;
+          .navbar-brand {
+            display: block;
+          }
+
+          .main-content {
+            padding-top: 55px;
           }
         }
       `
@@ -195,20 +242,19 @@ class MyApp extends connect(store)(LitElement) {
     // Anything that's related to rendering should be done in here.
     return html`
     <!-- Load Bootstrap -->
-    <link rel="stylesheet" href="./node_modules/bootstrap/dist/css/bootstrap.min.css">
-    <link rel="stylesheet" href="fonts/font-awesome-4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="${this.baseURI}/node_modules/bootstrap/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="${this.baseURI}/fonts/font-awesome-4.7.0/css/font-awesome.min.css">
     
     ${this._loggedUsr != null? html `
       <!-- Header -->
-      <app-header condenses reveals effects="waterfall">
-        <!-- <app-toolbar class="toolbar-top">
-          <button class="menu-btn" title="Menu" @click="${this._menuButtonClicked}">${menuIcon}</button>
-          
-        </app-toolbar> -->
-        <nav class="navbar navbar-expand-lg navbar-light bg-light row justify-content-between">
-          <embed src="/images/manifest/NSTLogo.svg" width="130" class="col-2"/>
-          <div class="col-3" main-title>${this.appTitle}</div>
-          <div class="collapse navbar-collapse col-5">
+      <!--<app-header condenses reveals effects="waterfall">-->
+        <nav class="navbar navbar-expand-lg navbar-light bg-light">
+            <button class="navbar-toggler" title="Menu" @click="${this._menuButtonClicked}">${menuIcon}</button>
+            <div main-title class="align-middle mx-auto">${this.appTitle}</div>
+            <embed src="images/manifest/NSTLogo.svg" width="190" class="navbar-brand"/>
+
+          <!-- <div class="col-3" main-title>${this.appTitle}</div> -->
+          <div class="collapse navbar-collapse justify-content-end">
             <ul class="navbar-nav text-uppercase font-weight-bold">
               <li class="nav-item ${this._page === 'request-time-off'? 'active' : ''}" >
                 <a class="nav-link" href="/request-time-off">Request</a>
@@ -217,17 +263,7 @@ class MyApp extends connect(store)(LitElement) {
                 <a class="nav-link" href="/requests-history">Request History</a>
               </li>
               <li class="nav-item">
-                <!-- <div class="dropdown">
-                  <button class="btn btn-light btn-sm dropdown-toggle" type="button" id="user_actions" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                    <img src="${this._loggedUsr.image}" width="25"> ${this._loggedUsr.name}
-                  </button>
-                  <div class="dropdown-menu" aria-labelledby="user_actions">
-                    <a class="dropdown-item">Action</a>
-                    <a class="dropdown-item">Another action</a>
-                    <a class="dropdown-item"><span class="fa fa-sign-out fa-sm">Log Out</a>
-                  </div>
-                </div> -->
-                <button class="btn btn-light btn-sm dropdown-toggle" type="button" id="user_actions" @click="${this._openDropdown}">
+                <button class="btn btn-light btn-sm dropdown-toggle user_actions" type="button" @click="${this._openDropdown}">
                   <img src="${this._loggedUsr.image}" width="25"> ${this._loggedUsr.name}
                 </button>
                 <iron-dropdown id="dropdown" class="text-capitalize" no-overlap>
@@ -237,6 +273,7 @@ class MyApp extends connect(store)(LitElement) {
                     <a class="list-group-item list-group-item-action" @click="${this._logOut}"><span class="fa fa-sign-out"></span> Log Out</a>
                   </div>
                 </iron-dropdown>
+                </div>
               </li>
             </ul>
           </div>
@@ -247,13 +284,27 @@ class MyApp extends connect(store)(LitElement) {
           <a ?selected="${this._page === 'request-time-off'}" href="/request-time-off">Request</a>
           <a ?selected="${this._page === 'requests-history'}" href="/requests-history">Requests History</a>
         </nav>-->
-      </app-header>
+      <!--</app-header>-->
 
       <!-- Drawer content -->
       <app-drawer
           .opened="${this._drawerOpened}"
           @opened-changed="${this._drawerOpenedChanged}">
-        <nav class="drawer-list">
+        <nav class="drawer-list container">
+          <a class="user_actions border-bottom" @click="${this._toggleAccordion}">
+            <img src="${this._loggedUsr.image}" width="25">
+            ${this._loggedUsr.name} ${this._usrAccordionOpened?
+              html `<span class="fa fa-chevron-up"></span>` : html `<span class="fa fa-chevron-down"></span>`}
+          </a>
+          <iron-collapse>
+            <div class="collapse-content">
+              <div class="list-group list-group-flush">
+                <div class="list-group-item"><span class="fa fa-user-circle"></span> Account</div>
+                <div class="list-group-item"><span class="fa fa-envelope"></span> Notification</div>
+                <div class="list-group-item" @click="${this._logOut}"><span class="fa fa-sign-out"></span> Log Out</div>
+              </div>
+            </div>
+          </iron-collapse> 
           <a ?selected="${this._page === 'request-time-off'}" href="/request-time-off">Request</a>
           <a ?selected="${this._page === 'requests-history'}" href="/requests-history">Requests History</a>
         </nav>
@@ -303,14 +354,25 @@ class MyApp extends connect(store)(LitElement) {
       });
     }
   }
+
   _openDropdown() {
     let dropdown = this.shadowRoot.querySelector("iron-dropdown");
     if(dropdown != null)
       dropdown.open();
   }
 
+  _toggleAccordion() {
+    let accordion = this.shadowRoot.querySelector("iron-collapse");
+    if(accordion != null){
+      accordion.toggle();
+      store.dispatch(updateAccordionState(!this._usrAccordionOpened));
+    }
+    
+  }
+
   _logOut() {
     store.dispatch(setUser(null));
+    store.dispatch(updateAccordionState(false));
     store.dispatch(navigate(decodeURIComponent("/")));
   }
 
@@ -327,6 +389,7 @@ class MyApp extends connect(store)(LitElement) {
     this._offline = state.app.offline;
     this._snackbarOpened = state.app.snackbarOpened;
     this._drawerOpened = state.app.drawerOpened;
+    this._usrAccordionOpened = state.app.usrAccordionOpened;
     this._loggedUsr = state.app.loggedUsr;
   }
 }

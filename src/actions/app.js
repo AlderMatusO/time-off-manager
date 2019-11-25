@@ -11,6 +11,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 export const UPDATE_PAGE = 'UPDATE_PAGE';
 export const UPDATE_OFFLINE = 'UPDATE_OFFLINE';
 export const UPDATE_DRAWER_STATE = 'UPDATE_DRAWER_STATE';
+export const UPDATE_ACCORDION_STATE = 'UPDATE_ACCORDION_STATE';
 export const OPEN_SNACKBAR = 'OPEN_SNACKBAR';
 export const CLOSE_SNACKBAR = 'CLOSE_SNACKBAR';
 export const SET_USER = 'SET_USER';
@@ -41,9 +42,6 @@ const loadPage = (page) => (dispatch) => {
       break;
     case 'requests-history':
       import('../components/requests-history.js');
-      break;
-    case 'view3':
-      import('../components/access-manager.js/index.js');
       break;
     default:
       page = 'view404';
@@ -85,6 +83,13 @@ export const updateOffline = (offline) => (dispatch, getState) => {
 export const updateDrawerState = (opened) => {
   return {
     type: UPDATE_DRAWER_STATE,
+    opened
+  };
+};
+
+export const updateAccordionState = (opened) => {
+  return {
+    type: UPDATE_ACCORDION_STATE,
     opened
   };
 };

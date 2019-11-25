@@ -40,11 +40,11 @@ class StartPage extends connect(store)(PageViewElement) {
 
     render() {
         return html`
-            <section>
-                <!-- Load Bootstrap -->
-                <link rel="stylesheet" href="./node_modules/bootstrap/dist/css/bootstrap.min.css">
-                <link rel="stylesheet" href="fonts/font-awesome-4.7.0/css/font-awesome.min.css">
+            <!-- Load Bootstrap -->
+            <link rel="stylesheet" href="${this.baseURI}/node_modules/bootstrap/dist/css/bootstrap.min.css">
+            <link rel="stylesheet" href="${this.baseURI}/fonts/font-awesome-4.7.0/css/font-awesome.min.css">
 
+            <section>
                 <div class="container">
                     <div class="row align-items-center">
                         <div class="col-md-4 offset-md-4">

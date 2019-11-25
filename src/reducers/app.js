@@ -14,6 +14,7 @@ import {
   OPEN_SNACKBAR,
   CLOSE_SNACKBAR,
   UPDATE_DRAWER_STATE,
+  UPDATE_ACCORDION_STATE,
   SET_USER
 } from '../actions/app.js';
 
@@ -22,6 +23,7 @@ const INITIAL_STATE = {
   offline: false,
   drawerOpened: false,
   snackbarOpened: false,
+  usrAccordionOpened: false,
   loggedUsr: null,
 };
 
@@ -51,6 +53,11 @@ const app = (state = INITIAL_STATE, action) => {
       return {
         ...state,
         snackbarOpened: false
+      };
+    case UPDATE_ACCORDION_STATE:
+      return {
+        ...state,
+        usrAccordionOpened: action.opened
       };
       case SET_USER:
         return {

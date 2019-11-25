@@ -12,6 +12,8 @@ module.exports = {
   staticFileGlobs: [
     'manifest.json',
     'src/**/*',
+    "images/**/*",
+    "fonts/**/*",
   ],
   runtimeCaching: [
     {
@@ -20,6 +22,22 @@ module.exports = {
     },
     {
       urlPattern: /^https:\/\/fonts.gstatic.com\//,
+      handler: 'fastest'
+    },
+    {
+      urlPattern: /\/bootstrap\/dist\/css\//,
+      handler: 'fastest'
+    },
+    {
+      urlPattern: /\/jquery\/dist\//,
+      handler: 'fastest'
+    },
+    {
+      urlPattern: /\/fonts\/font-awesome-4.7.0\//,
+      handler: 'fastest'
+    },
+    {
+      urlPattern: /\/images\/manifest\//,
       handler: 'fastest'
     }
   ]
