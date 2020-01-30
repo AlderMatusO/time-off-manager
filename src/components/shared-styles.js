@@ -129,11 +129,19 @@ export const SharedStyles = css`
   }
 
   h2,h3,h6 {
-    font-family: 'ITC Avant Garde Gothic LT';
+    font-family: 'ITC Avant Garde Gothic';
     color: #6c757d;
   }
 
   .btn-light:not(:disabled):not(.disabled).active:focus {
     box-shadow: none;
+  }
+
+  .non-selectable {
+    -moz-user-select: none; /* Firefox */
+    -ms-user-select: none; /* Internet Explorer */
+    -khtml-user-select: none; /* KHTML browsers (e.g. Konqueror) */
+    -webkit-user-select: none; /* Chrome, Safari, and Opera */
+    -webkit-touch-callout: none; /* Disable Android and iOS callouts*/
   }
 `;

@@ -12,12 +12,15 @@ import { html } from 'lit-element';
 import { PageViewElement } from './page-view-element.js';
 import { connect } from 'pwa-helpers/connect-mixin.js';
 import { store } from '../store.js';
+import { formatDateArr } from '../helpers/date-helper.js';
 import '@polymer/paper-card/paper-card.js';
 import '@polymer/paper-button/paper-button.js';
 import '/node_modules/mte-calendar/mte-calendar.js';
 
 // These are the shared styles needed by this element.
 import { SharedStyles } from './shared-styles.js';
+import { set, root } from '@polymer/polymer/lib/utils/path';
+import { setConfirm, setSuccess } from '../actions/app.js';
 
 class RequestTimeOff extends connect(store)(PageViewElement) {
   static get styles() {
@@ -32,14 +35,6 @@ class RequestTimeOff extends connect(store)(PageViewElement) {
       <link rel="stylesheet" href="${this.baseURI}/fonts/font-awesome-4.7.0/css/font-awesome.min.css">
 
       <section>
-          <!--
-          <iron-ajax
-            auto
-            url="this.request.url"
-            params="this.request.params"
-            handle-as="json"
-            @response="_handleResponse"
-          ></iron-ajax> -->
         <div class="container">
           <div class="row">
             <div class="col col-md">
@@ -53,11 +48,16 @@ class RequestTimeOff extends connect(store)(PageViewElement) {
                       <button id="pto-btn" type="button" class="btn btn-light border-0 ${this.employee.availableDays.pto.active? 'active' : ''}" @tap="${this._toggleSelection}">PTO <span id="badge-pto" class="badge badge-light badge-pill text-monospace">${this.employee.availableDays.pto.number}</span></button>
                       <button id="vacations-btn" type="button" class="btn btn-light border-0 ${this.employee.availableDays.vacations.active? 'active' : ''}" @tap="${this._toggleSelection}">Vacations <span id="badge-vacations" class="badge badge-light badge-pill text-monospace">${this.employee.availableDays.vacations.number}</span></button>
                     </div>
-                    <button class="btn btn-primary" style="display: ${this.enable_submit? 'inline-flex' :  'none'}" @tap="${this._submit}">
-                      Submit
-                    </button>
                   </div>
                 </div>
+              </div>
+              <div class="float-right">
+                <button class="btn btn-secondary mb-3" style="display: ${this.enable_submit? 'inline-flex' :  'none'}" @tap="${this._clearAll}">
+                  Clear all
+                </button>
+                <button class="btn btn-primary mb-3" style="display: ${this.enable_submit? 'inline-flex' :  'none'}" @tap="${this._submit}">
+                  Submit
+                </button>
               </div>
             </div>
             <div class="col col-md">
@@ -73,9 +73,9 @@ class RequestTimeOff extends connect(store)(PageViewElement) {
     return {
       calendar: { type: Object },
       events_def: { type: Object },
-      employee: { type: Object },
+      employee: { type: Object, reflect: true },
       enable_submit: { type: Boolean },
-      request: {type: Object }
+      apiURI: {type: String }
     };
   }
 
@@ -84,43 +84,18 @@ class RequestTimeOff extends connect(store)(PageViewElement) {
     super();
 
     this.events_def = {
-      PTO: {color: "#00CFB5", min_date: "today", max_date:"29-Aug-2020", restrictWeekdays: true, validation: this.validate_pto, indicators: false, scope: this},
-      Vacations: {color: "#FFDD30", min_date: "today", max_date:"29-December-2020", restrictWeekdays: true, validation: this.validate_vacation, indicators: false, scope: this}
+      PTO: {color: "#00CFB5", min_date: "today", max_date:"29-Aug-2023", restrictWeekdays: true, validation: this.validate_pto, indicators: false, scope: this},
+      Vacations: {color: "#FFDD30", min_date: "today", max_date:"29-December-2023", restrictWeekdays: true, validation: this.validate_vacation, indicators: false, scope: this}
     };
-    
-    //output
-    // this.server = {address: "https://vacations-253817.appspot.com", port: "", requests: { "time-off-req": "api/request", employee: "{employee_id}"} };
-    // this.request = {type:"", url:"", params:""};
-    // this.enable_submit = false;
 
-    //input
-    // this.employee = {
-    //   id : "john.doe@nearshoretechnology.com"
-    // };
-  
-    // fetch(this.get_url("employee"),
-    // {
-    //   method: 'get',
-    //   headers: {
-    //     "Content-Type": "application/json"
-    //   }
-    // })
-    // .then(response => {
-    //   return response.json();
-    // })
-    // .then(value => {
-      //this.employee = value;
-      // this.employee.image = "images/unknown.png",
-      // this.employee.availableDays.pto.active = true;
-      // this.employee.availableDays.vacations.active = false;
-    // })
-    // .catch(_ => console.log("Something went wrong"));
-    
+    this.apiURI = process.env.APIBASEURI;
+    this.enable_submit = false;
   }
 
   firstUpdated(changedProp) {
     super.firstUpdated(changedProp);
     this.calendar = this.shadowRoot.querySelector("mte-calendar");
+    tryLoad();
   }
 
   _toggleSelection( event ) {
@@ -159,37 +134,66 @@ class RequestTimeOff extends connect(store)(PageViewElement) {
     this.requestUpdate();
   }
 
+  _clearAll(e) {
+    this.calendar.clearAll();
+  }
+
   _submit(e) {
     //
     let _req_dates = this.calendar.getValues();
-    let params = {EmployeeId: this.employee.id, Pto: _req_dates['PTO'], Vacations: _req_dates['Vacations']};
-    let req_type = "time-off-req"
-    fetch(this.get_url(req_type), {
-      method: 'post',
-      body: JSON.stringify(params),
-      headers: {
-        'Content-Type': 'application/json'
+    let message = 'Are you sure you want to request the following dates?:<br/><div style="font-size:15px; font-weight:bold;">';
+    if(_req_dates['PTO'].length > 0){
+      message += '<p> - PTO: [' + formatDateArr(_req_dates['PTO']) + ']</p>';
+    }
+    if(_req_dates['Vacations'].length > 0){
+      message += '<p> -  Vacations: [' + formatDateArr(_req_dates['Vacations']) + ']</p>';
+    }
+
+    message += '</div>';
+    store.dispatch(setConfirm({
+      title: 'New Request',
+      message: message,
+      preConfirm: () => {
+        
+        let params = {EmployeeId: this.employee.id, Pto: _req_dates['PTO'], Vacations: _req_dates['Vacations']};
+        let req_type = "time-off-req"
+        fetch(this.get_url(req_type), {
+          method: 'post',
+          body: JSON.stringify(params),
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        })
+        .then(response => {
+          return response.text();
+        })
+        .then(value => store.dispatch(setSuccess({
+          title: 'Request successfully submitted',
+          message: value
+        })))
+        .catch(_err => console.log("Something went wrong: " + _err));
       }
-    })
-    .then(response => {
-      return response.text();
-    })
-    .then(value => {console.log(value);})
-    .catch(_ => console.log("Something went wrong"));
+    }));
   }
 
-  get_url(req_type) {
-    return this.server.address + ":" +this.server.port + "/" + this.server.requests[req_type].replace("{employee_id}", this.employee.id);
+  get_url(req_type, id = "") {
+    
+    const requests = { "time-off-req": "requests", employee: "{employee_id}"};
+
+    return  this.apiURI + requests[req_type].replace("{employee_id}", id);
   }
 
   validate_pto(_time, evts_obj) {
     if(this.scope.employee.availableDays.pto.number <= 0)
       return false;
 
-    //ptos cannot be consecutive. We add and substract a weekday to validate because weekends are not included
-    // let cur_date = new Date(_time);
-    // if(evts_obj.PTO.includes(cur_date.DateAdd("w", 1).getTime()) || evts_obj.PTO.includes(cur_date.DateAdd("w", -1).getTime()))
-    //   return false;
+    //PTO's cannot be consecutive to vacations and other PTO's. We add and substract a day to validate
+    let cur_date = new Date(_time);
+    if(evts_obj.PTO.includes(cur_date.DateAdd("d", 1).getTime()) ||
+      evts_obj.PTO.includes(cur_date.DateAdd("d", -1).getTime()) ||
+      evts_obj.Vacations.includes(cur_date.DateAdd("d", 1).getTime()) ||
+      evts_obj.Vacations.includes(cur_date.DateAdd("d", -1).getTime()))
+      return false;
 
     return true;
   }
@@ -197,14 +201,40 @@ class RequestTimeOff extends connect(store)(PageViewElement) {
   validate_vacation(_time, evts_obj) {
     if(this.scope.employee.availableDays.vacations.number <= 0)
       return false;
-    
+
+    //vacations cannot be consecutive to PTO's
+    let cur_date = new Date(_time);
+    if(evts_obj.PTO.includes(cur_date.DateAdd("d", 1).getTime()) ||
+      evts_obj.PTO.includes(cur_date.DateAdd("d", -1).getTime()))
+      return false;
     return true;
   }
 
+  loadEmployee(id){
+    fetch(this.get_url("employee", id),
+    {
+      method: 'get',
+      headers: {
+        "Content-Type": "application/json"
+      }
+    })
+    .then(response => {
+      return response.json();
+    })
+    .then(value => {
+      value.image = "images/unknown.png";
+      value.availableDays.pto.active = true;
+      value.availableDays.vacations.active = false;
+      this.employee = value;
+      this.requestUpdate();
+      // this.employee = value;
+      
+    }).catch(_ => console.log("Something went wrong"));
+  }
+
   stateChanged(state) {
-    this.employee = state.app.loggedUsr;
-    if(this.employee != null) {
-      this.employee.availableDays = { pto: { number: 3, active: true }, vacations: { number: 10, active: false } };
+    if(JSON.stringify(this.employee) !== JSON.stringify(state.app.loggedUsr)) {
+      this.employee = state.app.loggedUsr;
     }
   }
   

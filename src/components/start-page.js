@@ -117,12 +117,32 @@ class StartPage extends connect(store)(PageViewElement) {
             this.setError("form", "Invalid Credentials");
             return
         }
-        let user = {id: this.username, name: "Aldo Rafael Matus Angulo", position: "Developer", image : "images/unknown.png"};
         //login the user
-        store.dispatch(setUser(user));
-        store.dispatch(navigate(decodeURIComponent("/")));
-    }
 
+        //retrieve the employee data
+        fetch(process.env.APIBASEURI + this.username,
+        {
+            method: 'get',
+            headers: {
+                "Content-Type": "application/json"
+            }
+        })
+        .then(response => {
+            return response.json();
+        })
+        .then(value => {
+            value.image = "images/unknown.png";
+            value.availableDays.pto.active = true;
+            value.availableDays.vacations.active = false;
+            store.dispatch(setUser(value));
+            store.dispatch(navigate(decodeURIComponent("/")));
+        
+        }).catch(
+            _ => this.setError("form", "There was an error while retrieving the data from the server")
+        );
+
+        
+    }
 
 }
 

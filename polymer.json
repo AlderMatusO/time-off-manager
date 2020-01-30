@@ -11,6 +11,7 @@
     "node_modules/@webcomponents/webcomponentsjs/**",
     "node_modules/bootstrap/dist/css/**.css",
     "node_modules/jquery/dist/**.js",
+    ".env.production",
     "push-manifest.json"
   ],
   "builds": [

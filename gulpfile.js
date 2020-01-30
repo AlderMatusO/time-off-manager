@@ -12,6 +12,7 @@ const gulp = require('gulp');
 const rename = require('gulp-rename');
 const replace = require('gulp-replace');
 const del = require('del');
+const dotenv = require('dotenv');
 
 /**
  * Cleans the prpl-server build in the server directory.
@@ -41,3 +42,42 @@ gulp.task('prpl-server', gulp.series(
   'prpl-server:clean',
   'prpl-server:build'
 ));
+
+gulp.task('clear-env', () => {
+	const pattern = /\.env ?= ?{([^;]+)/g;
+
+	// development
+	gulp.src('index.html')
+		.pipe(replace(pattern, `.env = {
+				// Populated by the gulp import-env task.
+			}`))
+		.pipe(gulp.dest('.'));
+
+	// production
+	return gulp.src('server/build/**/index.html')
+		.pipe(replace(pattern, `.env={}`))
+		.pipe(gulp.dest('server/build'));
+});
+
+gulp.task('import-env', () => {
+  
+	const result = dotenv.config({ path: `${ __dirname }\\.env.${process.env.NODE_ENV.trim()}` })
+	if (result.error) {
+	  throw result.error;
+	}
+
+	const pattern = /\.env ?= ?{([^;]+)/g;
+	const replacement = `.env = ${JSON.stringify(result.parsed)}`;
+
+	if (process.env.NODE_ENV === 'production') {
+		return gulp.src('server/build/**/index.html')
+			.pipe(replace(pattern, replacement))
+			.pipe(gulp.dest('server/build'));
+	}
+
+	return gulp.src('index.html')
+		.pipe(replace(pattern, replacement))
+		.pipe(gulp.dest('.'));
+});
+
+gulp.task('env', gulp.series('clear-env', 'import-env'));

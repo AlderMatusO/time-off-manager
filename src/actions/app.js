@@ -15,6 +15,7 @@ export const UPDATE_ACCORDION_STATE = 'UPDATE_ACCORDION_STATE';
 export const OPEN_SNACKBAR = 'OPEN_SNACKBAR';
 export const CLOSE_SNACKBAR = 'CLOSE_SNACKBAR';
 export const SET_USER = 'SET_USER';
+export const SET_ALERT = 'SET_ALERT';
 
 export const navigate = (path) => (dispatch, getState) => {
   const state = getState();
@@ -111,3 +112,55 @@ export const setUser = (user) => {
     user
   };
 };
+
+export const setError = (alert) => {
+  return {
+    type: SET_ALERT,
+    alert: {
+      ...alert,
+      type: 'error',
+      confirm: 'OK'
+    }
+  };
+};
+
+export const setWarning = (alert) => {
+  return {
+    type: SET_ALERT,
+    alert: {
+      ...alert,
+      type: 'warning',
+    }
+  };
+};
+
+export const setConfirm = (alert) => {
+  return {
+    type: SET_ALERT,
+    alert: {
+      ...alert,
+      type: 'question',
+      confirm: 'Yes',
+      cancel: 'No',
+    }
+  };
+};
+
+export const setSuccess = (alert) => {
+  return {
+    type: SET_ALERT,
+    alert: {
+      ...alert,
+      type: 'success',
+      confirm: 'OK'
+    }
+  };
+};
+
+export const clearAlert = () => {
+  return {
+    type: SET_ALERT,
+    alert: null
+  };
+};
+

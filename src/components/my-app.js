@@ -15,8 +15,11 @@ import { installMediaQueryWatcher } from 'pwa-helpers/media-query.js';
 import { installOfflineWatcher } from 'pwa-helpers/network.js';
 import { installRouter } from 'pwa-helpers/router.js';
 import { updateMetadata } from 'pwa-helpers/metadata.js';
+import { clearAlert } from '../actions/app.js';
 import '@polymer/iron-dropdown/iron-dropdown.js';
 import '@polymer/iron-collapse/iron-collapse.js';
+
+
 // This element is connected to the Redux store.
 import { store } from '../store.js';
 
@@ -47,7 +50,8 @@ class MyApp extends connect(store)(LitElement) {
       _drawerOpened: { type: Boolean },
       _snackbarOpened: { type: Boolean },
       _offline: { type: Boolean },
-      _loggedUsr: { type: Object }
+      _loggedUsr: { type: Object },
+      _alert: { type: Object }
     };
   }
 
@@ -391,6 +395,25 @@ class MyApp extends connect(store)(LitElement) {
     this._drawerOpened = state.app.drawerOpened;
     this._usrAccordionOpened = state.app.usrAccordionOpened;
     this._loggedUsr = state.app.loggedUsr;
+
+    if(JSON.stringify(state.app.alert) != JSON.stringify(this._alert)) {
+      this._alert = state.app.alert;
+      if(this._alert != null) {
+        let alert = Swal.fire({
+          title: this._alert.type !== error? this._alert.title : 'ERROR',
+          html: this._alert.message,
+          icon: this._alert.type,
+          showCancelButton: (this._alert.hasOwnProperty('cancel')),
+          confirmButtonText: this._alert.hasOwnProperty('confirm')? this._alert.confirm : "OK",
+          cancelButtonText: this._alert.hasOwnProperty('cancel')? this._alert.cancel : '',
+          preConfirm: this._alert.hasOwnProperty('preConfirm')? this._alert.preConfirm : null,
+          onAfterClose: () => store.dispatch(clearAlert())
+        });
+        
+        if(this._alert.hasOwnProperty('postAlert'))
+          alert.then( this._alert.postAlert );
+      }
+    }
   }
 }
 

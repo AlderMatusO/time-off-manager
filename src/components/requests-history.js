@@ -13,9 +13,7 @@ import { PageViewElement } from './page-view-element.js';
 import { connect } from 'pwa-helpers/connect-mixin.js';
 // This element is connected to the Redux store.
 import { store } from '../store.js';
-
-// These are the actions needed by this element.
-import { increment, decrement } from '../actions/counter.js';
+import { formatDateArr } from '../helpers/date-helper.js';
 
 
 // These are the elements needed by this element.
@@ -29,7 +27,11 @@ class RequestsHistory extends connect(store)(PageViewElement) {
     return {
       // This is the data from the store.
       requests: { type: Array },
-      numero: { type: Number },
+      apiURI: { type: String },
+      user: { type: Object },
+      events_def: { type: Object },
+      req_selected: { type: Number },
+      calendar: { type: Object }
     };
   }
 
@@ -41,34 +43,86 @@ class RequestsHistory extends connect(store)(PageViewElement) {
 
   constructor() {
     super();
-    this.numero = 2;
+    this.apiURI = process.env.APIBASEURI;
     this.requests = {list: []};
-    // fetch("https://vacations-253817.appspot.com/api/request/john.doe@nearshoretechnology.com")
-    // .then(response => { return response.json(); })
-    // .then(data => { this.requests = data;})
-    // .catch(err => console.log(err));
+    this.events_def = {
+      PTO: {color: "#00CFB5", min_date: "today", max_date:"31-December-9999", restrictWeekdays: true, validation: null, indicators: true, scope: this},
+      Vacations: {color: "#FFDD30", min_date: "today", max_date:"31-December-9999", restrictWeekdays: true, validation: null, indicators: true, scope: this}
+    };
+    this.tryLoad();
+  }
+
+  firstUpdated() {
+    this.calendar = this.shadowRoot.querySelector("mte-calendar");
+    this.req_selected = 0;
   }
 
   render() {
     return html`
+      <link rel="stylesheet" href="${this.baseURI}/node_modules/bootstrap/dist/css/bootstrap.min.css">
+      <link rel="stylesheet" href="${this.baseURI}/fonts/font-awesome-4.7.0/css/font-awesome.min.css">
+
       <section>
-        <h1>Requests List</h1>
-        <table>
-          <tr>
-            <th>Status</th>
-            <th>Vacation Dates</th>
-            <th>PTO Dates</th>
-          </tr>
-          ${ this.requests.list.map((request) => html `
-            <tr>
-              <td>${request.status}</td>
-              <td>${request.vacationDates!=null? request.vacationDates.join(',') : "none"}</td>
-              <td>${request.ptoDates!=null? request.ptoDates.join(',') : "none"}</td>
-            </tr>`
-          )}
-        </table>
+        <h3>Requests List</h3>
+        <div class="container">
+          <div class="row">
+            <div class="col col-md">
+              <table class="table table-borderless table-hover non-selectable">
+                <thead>
+                  <tr>
+                    <th scope="col">Status</th>
+                    <th scope="col">Vacation Dates</th>
+                    <th scope="col">PTO Dates</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${ this.requests.list.map((request, index) => html `
+                    <tr class="${ this.req_selected === index? "bg-info text-white" : "" }"
+                      @tap="${ this._select }" id="${index}">
+                      <th scope="row" class="cell">${request.status}</td>
+                      <td class="cell">${request.vacationDates!=null? formatDateArr(request.vacationDates): "none"}</td>
+                      <td class="cell">${request.ptoDates!=null? formatDateArr(request.ptoDates) : "none"}</td>
+                    </tr>`
+                  )}
+                </tbody>
+              </table>
+            </div>
+            <div class="col col-md">
+              <mte-calendar _readonly="true" style="max-width: 540px; display:${this.req_selected >= 0? "block" : "none"};" .evt_types="${this.events_def}"></mte-calendar>
+            </div>
+          </div>
+        </div>
       </section>
     `;
+  }
+
+  tryLoad()
+  {
+    if(this.user != null){
+      fetch(this.apiURI + 'requests/' + this.user.id)
+      .then(response => { return response.json(); })
+      .then(data => { 
+        this.requests = data;
+        this.loadDatesOnCalendar(this.req_selected);
+      })
+      .catch(err => console.log(err));
+    }
+  }
+
+  stateChanged(state) {
+    this.user = state.app.loggedUsr;
+    this.tryLoad();
+  }
+
+  _select( evt ) {
+    let el = evt.target.getAttribute("class") === "cell"? evt.target.parentNode : evt.target;
+    this.req_selected = parseInt(el.getAttribute("id"));
+    this.loadDatesOnCalendar(this.req_selected);
+  }
+
+  loadDatesOnCalendar(index) {
+    this.calendar.evt_types.PTO.dates = this.requests.list[index].ptoDates
+    this.calendar.evt_types.Vacations.dates = this.requests.list[index].vacationDates
   }
 
 }

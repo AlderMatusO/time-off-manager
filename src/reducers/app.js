@@ -15,7 +15,8 @@ import {
   CLOSE_SNACKBAR,
   UPDATE_DRAWER_STATE,
   UPDATE_ACCORDION_STATE,
-  SET_USER
+  SET_USER,
+  SET_ALERT
 } from '../actions/app.js';
 
 const INITIAL_STATE = {
@@ -25,6 +26,7 @@ const INITIAL_STATE = {
   snackbarOpened: false,
   usrAccordionOpened: false,
   loggedUsr: null,
+  alert: null
 };
 
 const app = (state = INITIAL_STATE, action) => {
@@ -63,6 +65,11 @@ const app = (state = INITIAL_STATE, action) => {
         return {
           ...state,
           loggedUsr: action.user
+        };
+      case SET_ALERT:
+        return {
+          ...state,
+          alert: action.alert
         };
     default:
       return state;
