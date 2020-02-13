@@ -15,6 +15,7 @@ import { store } from '../store.js';
 import { formatDateArr } from '../helpers/date-helper.js';
 import '@polymer/paper-card/paper-card.js';
 import '@polymer/paper-button/paper-button.js';
+import '@polymer/iron-collapse/iron-collapse.js';
 import '/node_modules/mte-calendar/mte-calendar.js';
 
 // These are the shared styles needed by this element.
@@ -43,6 +44,33 @@ class RequestTimeOff extends connect(store)(PageViewElement) {
                   <h5 class="card-title">${this.employee.name}</h5>
                   <h6 id="employee-position">${this.employee.position}</h6>
                   <p class="card-text">According to our register your AVAILABLE days are:</p>
+                  <h6>
+                    <a href="#" @click="${ this._toggleDetails }">Vacations details
+                      ${ this.showDetails? html `<span class="fa fa-chevron-up"></span>` : html `<span class="fa fa-chevron-down"></span>` }
+                    </a>
+                  </h6>
+                  <iron-collapse>
+                    <div id="available-vacations" class="collapse-content">
+                      <table class="table-borderless non-selectable">
+                        <thead>
+                          <tr>
+                            <th scope="col">Days</th>
+                            <th scope="col">Expire on</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          ${ this.employee.availableDays.vacations.exp_dates.map( (exp) => html `
+                            <tr>
+                              <th scope="row">${ exp.days }</th>
+                              <td>${ exp.expirationDate!=null? formatDateArr([exp.expirationDate]) : "--" }</td>
+                            </tr>
+                          `)
+                          }
+                        </tbody>
+                      </table>
+                    </div>
+                  </iron-collapse>
+                  <br />
                   <div id="employee-actions">
                     <div class="btn-group" role="group">
                       <button id="pto-btn" type="button" class="btn btn-light border-0 ${this.employee.availableDays.pto.active? 'active' : ''}" @tap="${this._toggleSelection}">PTO <span id="badge-pto" class="badge badge-light badge-pill text-monospace">${this.employee.availableDays.pto.number}</span></button>
@@ -75,7 +103,8 @@ class RequestTimeOff extends connect(store)(PageViewElement) {
       events_def: { type: Object },
       employee: { type: Object, reflect: true },
       enable_submit: { type: Boolean },
-      apiURI: {type: String }
+      apiURI: {type: String },
+      showDetails: { type: Boolean }
     };
   }
 
@@ -90,6 +119,7 @@ class RequestTimeOff extends connect(store)(PageViewElement) {
 
     this.apiURI = process.env.APIBASEURI;
     this.enable_submit = false;
+    this.showDetails = false;
   }
 
   firstUpdated(changedProp) {
@@ -178,7 +208,7 @@ class RequestTimeOff extends connect(store)(PageViewElement) {
 
   get_url(req_type, id = "") {
     
-    const requests = { "time-off-req": "requests", employee: "{employee_id}"};
+    const requests = { "time-off-req": "requests", employee: "employees/{employee_id}"};
 
     return  this.apiURI + requests[req_type].replace("{employee_id}", id);
   }
@@ -228,13 +258,20 @@ class RequestTimeOff extends connect(store)(PageViewElement) {
       this.employee = value;
       this.requestUpdate();
       // this.employee = value;
-      
     }).catch(_ => console.log("Something went wrong"));
   }
 
   stateChanged(state) {
     if(JSON.stringify(this.employee) !== JSON.stringify(state.app.loggedUsr)) {
       this.employee = state.app.loggedUsr;
+    }
+  }
+
+  _toggleDetails(evt) {
+    let accordion = this.shadowRoot.querySelector("iron-collapse");
+    if(accordion != null){
+      accordion.toggle();
+      this.showDetails = !this.showDetails;
     }
   }
   

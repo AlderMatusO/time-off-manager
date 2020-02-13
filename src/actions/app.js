@@ -20,7 +20,7 @@ export const SET_ALERT = 'SET_ALERT';
 export const navigate = (path) => (dispatch, getState) => {
   const state = getState();
   // Extract the page name from path.
-  const page = state.app.loggedUsr === null? 'start-page' : (path === '/' ? 'request-time-off' : path.slice(1));
+  const page = state.app.loggedUsr === null? 'start-page' : (path === '/index.html' || path === '/' ? 'request-time-off' : path.slice(1));
 
   // Any other info you might want to extract from the path (like page type),
   // you can do here

@@ -120,7 +120,7 @@ class StartPage extends connect(store)(PageViewElement) {
         //login the user
 
         //retrieve the employee data
-        fetch(process.env.APIBASEURI + this.username,
+        fetch(process.env.APIBASEURI + "employees/"+ this.username,
         {
             method: 'get',
             headers: {
@@ -134,14 +134,30 @@ class StartPage extends connect(store)(PageViewElement) {
             value.image = "images/unknown.png";
             value.availableDays.pto.active = true;
             value.availableDays.vacations.active = false;
-            store.dispatch(setUser(value));
-            store.dispatch(navigate(decodeURIComponent("/")));
-        
+            this.loadAvailableVacations(value);
         }).catch(
             _ => this.setError("form", "There was an error while retrieving the data from the server")
         );
+    }
 
-        
+    loadAvailableVacations(employee) {
+        fetch(process.env.APIBASEURI + "employees/" + employee.id + "/days",
+        {
+        method: 'get',
+        headers: {
+            "Content-Type": "application/json"
+        }
+        })
+        .then(response => {
+            return response.json();
+        })
+        .then(value => {
+            employee.availableDays.vacations.exp_dates = value.vacations;
+            console.log(JSON.stringify(employee.availableDays));
+            store.dispatch(setUser(employee));
+            store.dispatch(navigate(decodeURIComponent("/index.html")));
+        })
+        .catch(_ => console.log("Something went wrong"));
     }
 
 }

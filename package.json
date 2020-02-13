@@ -13,6 +13,7 @@
     "build:static": "polymer build",
     "postbuild": "set NODE_ENV=production && gulp env",
     "postbuild:static": "set NODE_ENV=production && gulp env",
+    "preserve": "set NODE_ENV=production && gulp env",
     "serve": "prpl-server --root server/build",
     "serve:static": "polymer serve --port 5000 build/es5-bundled",
     "test": "npm run test:unit && npm run test:integration",
