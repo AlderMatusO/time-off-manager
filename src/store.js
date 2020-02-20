@@ -32,7 +32,7 @@ export const store = createStore(
   state => state,
   devCompose(
     lazyReducerEnhancer(combineReducers),
-    applyMiddleware(thunk))
+    applyMiddleware(thunk)),
 );
 
 // Initially loaded reducers.

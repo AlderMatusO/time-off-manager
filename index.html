@@ -65,7 +65,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     <meta property="og:image" content="images/manifest/icon-144x144.png" />
 
     
-    <link rel="stylesheet" href="fonts/font-awesome-4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="fonts/font-awesome-4.7.0/css/all.min.css">
     <script src="node_modules/jquery/dist/jquery.min.js"></script>
     <!-- Performance tip: hint to the browser to start the handshake for the fonts site -->
     <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin>
@@ -79,7 +79,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         });
       }
       
-      (window.process = window.process || {}).env = {"APIBASEURI":"https://localhost:5001/"};
+      (window.process = window.process || {}).env = {
+				// Populated by the gulp import-env task.
+			};
     </script>
     <!-- Add any global styles for body, document, etc. -->
     <style>

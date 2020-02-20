@@ -16,6 +16,8 @@ import { installOfflineWatcher } from 'pwa-helpers/network.js';
 import { installRouter } from 'pwa-helpers/router.js';
 import { updateMetadata } from 'pwa-helpers/metadata.js';
 import { clearAlert } from '../actions/app.js';
+import { UserService } from '../services/user.js';
+import { AuthService, authService, userService } from '../services/auth.js';
 import '@polymer/iron-dropdown/iron-dropdown.js';
 import '@polymer/iron-collapse/iron-collapse.js';
 
@@ -30,7 +32,6 @@ import {
   updateDrawerState,
   updateAccordionState,
   checkForUser,
-  setUser
 } from '../actions/app.js';
 
 // These are the elements needed by this element.
@@ -38,7 +39,6 @@ import '@polymer/app-layout/app-drawer/app-drawer.js';
 import '@polymer/app-layout/app-header/app-header.js';
 import '@polymer/app-layout/app-scroll-effects/effects/waterfall.js';
 import '@polymer/app-layout/app-toolbar/app-toolbar.js';
-import { menuIcon } from './my-icons.js';
 import './snack-bar.js';
 
 class MyApp extends connect(store)(LitElement) {
@@ -51,7 +51,9 @@ class MyApp extends connect(store)(LitElement) {
       _snackbarOpened: { type: Boolean },
       _offline: { type: Boolean },
       _loggedUsr: { type: Object },
-      _alert: { type: Object }
+      _alert: { type: Object },
+      authService: { type: AuthService },
+      userService: { type: UserService },
     };
   }
 
@@ -247,13 +249,15 @@ class MyApp extends connect(store)(LitElement) {
     return html`
     <!-- Load Bootstrap -->
     <link rel="stylesheet" href="${this.baseURI}/node_modules/bootstrap/dist/css/bootstrap.min.css">
-    <link rel="stylesheet" href="${this.baseURI}/fonts/font-awesome-4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="${this.baseURI}/fonts/font-awesome-4.7.0/css/all.min.css">
     
     ${this._loggedUsr != null? html `
       <!-- Header -->
       <!--<app-header condenses reveals effects="waterfall">-->
         <nav class="navbar navbar-expand-lg navbar-light bg-light">
-            <button class="navbar-toggler" title="Menu" @click="${this._menuButtonClicked}">${menuIcon}</button>
+            <button class="navbar-toggler" title="Menu" @click="${this._menuButtonClicked}">
+            <svg height="24" viewBox="0 0 24 24" width="24"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"></path></svg>
+            </button>
             <div main-title class="align-middle mx-auto">${this.appTitle}</div>
             <embed src="images/manifest/NSTLogo.svg" width="190" class="navbar-brand"/>
 
@@ -317,9 +321,9 @@ class MyApp extends connect(store)(LitElement) {
 
       <!-- Main content -->
       <main role="main" class="main-content">
-        <start-page class="page" ?active="${this._page === 'start-page'}"></start-page>
-        <request-time-off class="page" ?active="${this._page === 'request-time-off'}"></request-time-off>
-        <requests-history class="page" ?active="${this._page === 'requests-history'}"></requests-history>
+        <start-page class="page" ?active="${this._page === 'start-page'}" .authService="${this.authService}"></start-page>
+        <request-time-off class="page" ?active="${this._page === 'request-time-off'}" .userService="${this.userService}"></request-time-off>
+        <requests-history class="page" ?active="${this._page === 'requests-history'}" .userService="${this.userService}"></requests-history>
         <my-view404 class="page" ?active="${this._page === 'view404'}"></my-view404>
       </main>
 
@@ -334,6 +338,8 @@ class MyApp extends connect(store)(LitElement) {
     // To force all event listeners for gestures to be passive.
     // See https://www.polymer-project.org/3.0/docs/devguide/settings#setting-passive-touch-gestures
     setPassiveTouchGestures(true);
+    this.authService = authService;
+    this.userService = userService;
   }
 
   connectedCallback() {
@@ -375,9 +381,7 @@ class MyApp extends connect(store)(LitElement) {
   }
 
   _logOut() {
-    store.dispatch(setUser(null));
-    store.dispatch(updateAccordionState(false));
-    store.dispatch(navigate(decodeURIComponent("/")));
+    this.authService.logout();
   }
 
   _menuButtonClicked() {

@@ -105,6 +105,15 @@ export const checkForUser = (dispatch) => {
 
 };
 
+export const loginUser = (userId) => {
+
+  let user = null;
+
+  
+
+  
+};
+
 export const setUser = (user) => {
   localStorage.setItem("user", JSON.stringify(user));
   return {

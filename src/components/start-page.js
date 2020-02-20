@@ -3,7 +3,7 @@ import { PageViewElement } from './page-view-element.js';
 import { connect } from 'pwa-helpers/connect-mixin.js';
 // This element is connected to the Redux store.
 import { store } from '../store.js';
-import { setUser, navigate } from '../actions/app.js';
+import { AuthService, AuthError } from '../services/auth.js';
 
 import { SharedStyles } from './shared-styles.js';
 
@@ -19,7 +19,7 @@ class StartPage extends connect(store)(PageViewElement) {
         this.username = "";
         this.password = "";
         this.error = {
-            el: "",
+            element: "",
             message: ""
         };
     }
@@ -28,7 +28,8 @@ class StartPage extends connect(store)(PageViewElement) {
         return {
             username : { type: String },
             password : { type: String },
-            error: { type: Object }
+            error: { type: Object },
+            authService: { type: AuthService }
         };
     }
 
@@ -42,7 +43,7 @@ class StartPage extends connect(store)(PageViewElement) {
         return html`
             <!-- Load Bootstrap -->
             <link rel="stylesheet" href="${this.baseURI}/node_modules/bootstrap/dist/css/bootstrap.min.css">
-            <link rel="stylesheet" href="${this.baseURI}/fonts/font-awesome-4.7.0/css/font-awesome.min.css">
+            <link rel="stylesheet" href="${this.baseURI}/fonts/font-awesome-4.7.0/css/all.min.css">
 
             <section>
                 <div class="container">
@@ -59,11 +60,11 @@ class StartPage extends connect(store)(PageViewElement) {
                                 </div>
                                 <div class="form-group">
                                     <label for="username">Username</label>
-                                    <input type="email" class="form-control ${["username","form"].includes(this.error.el) ? "is-invalid" : ""}" id="username" .value="${this.username}" placeholder="username@nearshoretechnology.com" @change="${(e)=>{this.username = e.target.value;}}">
+                                    <input type="email" class="form-control ${["username","form"].includes(this.error.element) ? "is-invalid" : ""}" id="username" .value="${this.username}" placeholder="username@nearshoretechnology.com" @change="${(e)=>{this.username = e.target.value;}}">
                                 </div>
                                 <div class="form-group">
                                     <label for="password">Password</label>
-                                    <input type="password" class="form-control ${["password","form"].includes(this.error.el) ? "is-invalid" : ""}" id="password" .value="${this.password}" placeholder="*********" @change="${(e)=>{this.password = e.target.value;}}">
+                                    <input type="password" class="form-control ${["password","form"].includes(this.error.element) ? "is-invalid" : ""}" id="password" .value="${this.password}" placeholder="*********" @change="${(e)=>{this.password = e.target.value;}}">
                                     <small id="passwordHelp" class="form-text text-muted">Did you <a href="/">forget your password?</a></small>
                                     <a href="/"><small id="signInHelp" class="form-text text-muted">Sign in</small></a>
                                 </div>
@@ -75,91 +76,17 @@ class StartPage extends connect(store)(PageViewElement) {
             </section>
         `;
     }
-
-    validate() {
-        if(this.username == "")
-        {
-            this.setError("username", "The Username is mandatory.");
-            return false;
-        }
-        if(!/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(this.username)) {
-            this.setError("username", "The Username must be a valid email address.");
-            return false;
-        }
+    async _submit(e) {
+        this.error = {element: "", message: ""};
         
-        if(this.password == "")
-        {
-            this.setError("password", "The Password is mandatory.");
-            return false;
-        }
-        if(this.password.length < 8) {
-            this.setError("password", "The password must be at least 8 characters long.");
-            return false;
-        }
-        return true
-        
-    }
-
-    setError(element, message) {
-        this.error.el = element;
-        this.error.message = message;
-        this.requestUpdate();
-    }
-
-    _submit(e) {
-        this.setError("","");
-        if(!this.validate()) {
-            return;
-        }
-        
-        //Do the submit
-        if(this.username != "aldo.matus@nearshoretechnology.com" || this.password != "12345678") {
-            this.setError("form", "Invalid Credentials");
-            return
-        }
         //login the user
-
-        //retrieve the employee data
-        fetch(process.env.APIBASEURI + "employees/"+ this.username,
-        {
-            method: 'get',
-            headers: {
-                "Content-Type": "application/json"
-            }
-        })
-        .then(response => {
-            return response.json();
-        })
-        .then(value => {
-            value.image = "images/unknown.png";
-            value.availableDays.pto.active = true;
-            value.availableDays.vacations.active = false;
-            this.loadAvailableVacations(value);
-        }).catch(
-            _ => this.setError("form", "There was an error while retrieving the data from the server")
-        );
-    }
-
-    loadAvailableVacations(employee) {
-        fetch(process.env.APIBASEURI + "employees/" + employee.id + "/days",
-        {
-        method: 'get',
-        headers: {
-            "Content-Type": "application/json"
+        try {
+            await this.authService.login( { username: this.username, password: this.password } );
+        } catch(err) {
+            this.error = err;
+            this.requestUpdate();
         }
-        })
-        .then(response => {
-            return response.json();
-        })
-        .then(value => {
-            employee.availableDays.vacations.exp_dates = value.vacations;
-            console.log(JSON.stringify(employee.availableDays));
-            store.dispatch(setUser(employee));
-            store.dispatch(navigate(decodeURIComponent("/index.html")));
-        })
-        .catch(_ => console.log("Something went wrong"));
     }
-
 }
 
 window.customElements.define('start-page', StartPage);

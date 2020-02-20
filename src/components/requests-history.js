@@ -13,14 +13,11 @@ import { PageViewElement } from './page-view-element.js';
 import { connect } from 'pwa-helpers/connect-mixin.js';
 // This element is connected to the Redux store.
 import { store } from '../store.js';
-import { formatDateArr } from '../helpers/date-helper.js';
-
-
-// These are the elements needed by this element.
-import './counter-element.js';
+import { formatDateArr } from '../helpers/date-arrays.js';
 
 // These are the shared styles needed by this element.
 import { SharedStyles } from './shared-styles.js';
+import { UserService } from '../services/user.js';
 
 class RequestsHistory extends connect(store)(PageViewElement) {
   static get properties() {
@@ -31,7 +28,8 @@ class RequestsHistory extends connect(store)(PageViewElement) {
       user: { type: Object },
       events_def: { type: Object },
       req_selected: { type: Number },
-      calendar: { type: Object }
+      calendar: { type: Object },
+      userService: { type: UserService }
     };
   }
 
@@ -43,24 +41,23 @@ class RequestsHistory extends connect(store)(PageViewElement) {
 
   constructor() {
     super();
-    this.apiURI = process.env.APIBASEURI;
     this.requests = {list: []};
     this.events_def = {
       PTO: {color: "#00CFB5", min_date: "today", max_date:"31-December-9999", restrictWeekdays: true, validation: null, indicators: true, scope: this},
       Vacations: {color: "#FFDD30", min_date: "today", max_date:"31-December-9999", restrictWeekdays: true, validation: null, indicators: true, scope: this}
     };
-    this.tryLoad();
   }
 
   firstUpdated() {
     this.calendar = this.shadowRoot.querySelector("mte-calendar");
     this.req_selected = 0;
+    this.tryLoad();
   }
 
   render() {
     return html`
       <link rel="stylesheet" href="${this.baseURI}/node_modules/bootstrap/dist/css/bootstrap.min.css">
-      <link rel="stylesheet" href="${this.baseURI}/fonts/font-awesome-4.7.0/css/font-awesome.min.css">
+      <link rel="stylesheet" href="${this.baseURI}/fonts/font-awesome-4.7.0/css/all.min.css">
 
       <section>
         <h3>Requests List</h3>
@@ -80,8 +77,8 @@ class RequestsHistory extends connect(store)(PageViewElement) {
                     <tr class="${ this.req_selected === index? "bg-info text-white" : "" }"
                       @tap="${ this._select }" id="${index}">
                       <th scope="row" class="cell">${request.status}</td>
-                      <td class="cell">${request.vacationDates!=null? formatDateArr(request.vacationDates): "none"}</td>
-                      <td class="cell">${request.ptoDates!=null? formatDateArr(request.ptoDates) : "none"}</td>
+                      <td class="cell">${request.vacationDates != null && request.vacationDates.length > 0? formatDateArr(request.vacationDates): "--"}</td>
+                      <td class="cell">${request.ptoDates != null && request.ptoDates.length > 0? formatDateArr(request.ptoDates) : "--"}</td>
                     </tr>`
                   )}
                 </tbody>
@@ -96,22 +93,23 @@ class RequestsHistory extends connect(store)(PageViewElement) {
     `;
   }
 
-  tryLoad()
+  async tryLoad()
   {
     if(this.user != null){
-      fetch(this.apiURI + 'requests/' + this.user.id)
-      .then(response => { return response.json(); })
-      .then(data => { 
-        this.requests = data;
+      try{
+        this.requests = await this.userService.getRequestsHistory(this.user.id);
         this.loadDatesOnCalendar(this.req_selected);
-      })
-      .catch(err => console.log(err));
+      }
+      catch(err) {
+        console.log("something went wrong: " + err);
+      }
     }
   }
 
   stateChanged(state) {
     this.user = state.app.loggedUsr;
-    this.tryLoad();
+    if(this.userService)
+      this.tryLoad();
   }
 
   _select( evt ) {
@@ -121,8 +119,10 @@ class RequestsHistory extends connect(store)(PageViewElement) {
   }
 
   loadDatesOnCalendar(index) {
-    this.calendar.evt_types.PTO.dates = this.requests.list[index].ptoDates
-    this.calendar.evt_types.Vacations.dates = this.requests.list[index].vacationDates
+    if(this.requests.list.length == 0) return;
+
+    this.calendar.evt_types.PTO.dates = this.requests.list[index].ptoDates;
+    this.calendar.evt_types.Vacations.dates = this.requests.list[index].vacationDates;
   }
 
 }
