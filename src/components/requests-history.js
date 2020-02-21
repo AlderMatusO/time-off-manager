@@ -62,9 +62,10 @@ class RequestsHistory extends connect(store)(PageViewElement) {
       <section>
         <h3>Requests List</h3>
         <div class="container">
+        ${this.requests.list != null && this.requests.list.length > 0? html`
           <div class="row">
             <div class="col col-md">
-              <table class="table table-borderless table-hover non-selectable">
+              <table class="table table-sm table-borderless table-hover non-selectable">
                 <thead>
                   <tr>
                     <th scope="col">Status</th>
@@ -88,6 +89,11 @@ class RequestsHistory extends connect(store)(PageViewElement) {
               <mte-calendar _readonly="true" style="max-width: 540px; display:${this.req_selected >= 0? "block" : "none"};" .evt_types="${this.events_def}"></mte-calendar>
             </div>
           </div>
+        `: html `
+          <div class="alert alert-primary" role="alert">
+            You have no requests to display.
+          </div>`
+        }
         </div>
       </section>
     `;

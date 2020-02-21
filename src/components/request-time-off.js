@@ -51,7 +51,7 @@ class RequestTimeOff extends connect(store)(PageViewElement) {
                   </h6>
                   <iron-collapse>
                     <div id="available-vacations" class="collapse-content">
-                      <table style="width:50%;" class="table table-borderless non-selectable">
+                      <table style="width:50%;" class="table table-sm table-borderless non-selectable">
                         <thead>
                           <tr class="text-center">
                             <th scope="col">Days</th>
@@ -62,13 +62,13 @@ class RequestTimeOff extends connect(store)(PageViewElement) {
                         <tbody>
                           ${ this.employee.availableDays.vacations.exp_dates.map( (exp, index) => html `
                             <tr class="text-center"
-                            style="color:${ !this.isExpired(new Date(exp.expirationDate)) && this.isAboutToExpire(new Date(exp.expirationDate))? 
+                            style="color:${ !exp.isExpired() && exp.isAboutToExpire()? 
                             "red" : "black"}">
                               <th scope="row">${ exp.days }</th>
                               <td>${ exp.expirationDate!=null? formatDateArr([exp.expirationDate]) : "--" }</td>
-                              <td>${ this.isExpired(new Date(exp.expirationDate))? 
+                              <td>${ exp.isExpired()? 
                                 html `<span style="color: black;" class="fas fa-skull-crossbones">` : (
-                                this.isAboutToExpire(new Date(exp.expirationDate))?
+                                exp.isAboutToExpire()?
                                 html `<span style="color: red;" class="fas fa-bomb">` : html `` ) }</td>
                             </tr>
                           `)
@@ -158,6 +158,14 @@ class RequestTimeOff extends connect(store)(PageViewElement) {
     this.employee.availableDays[evt_added].number--;
     if(this.calendar.isEmpty())
       this.enable_submit = true;
+
+    if(evt_added === "vacations"){
+      let selectedCycle = 
+      this.employee.availableDays.vacations.findFirstCycle((item)=> item.days > 0); 
+
+      selectedCycle.days--;
+    }
+
     this.requestUpdate();
   }
 
@@ -167,8 +175,16 @@ class RequestTimeOff extends connect(store)(PageViewElement) {
     if(this.calendar.isEmpty())
       this.enable_submit = false;
 
+    if(evt_added === "vacations"){
+      let selectedCycle = 
+      this.employee.availableDays.vacations.findLastCycle((item)=> item.days < item.par_days); 
+      selectedCycle.days++;
+    }
+
     this.requestUpdate();
   }
+
+  
 
   _clearAll(e) {
     this.calendar.clearAll();
@@ -235,16 +251,6 @@ class RequestTimeOff extends connect(store)(PageViewElement) {
       evts_obj.PTO.includes(cur_date.DateAdd("d", -1).getTime()))
       return false;
     return true;
-  }
-
-  isAboutToExpire(date) {
-    let today = new Date();
-    return today.DateAdd("m", 2).getTime() > date.getTime();
-  }
-
-  isExpired(date){
-    let today = new Date();
-    return today.getTime() > date.getTime();
   }
 
   stateChanged(state) {

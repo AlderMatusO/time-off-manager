@@ -30,6 +30,8 @@ export class UserService extends connect(store)(BaseService) {
         usr.availableDays.pto.active = true;
         usr.availableDays.vacations.active = false;
         usr.availableDays.vacations.exp_dates = vacationsData;
+        this.vacationsFactory(usr.availableDays.vacations);
+
         return usr;
     }
 
@@ -82,6 +84,35 @@ export class UserService extends connect(store)(BaseService) {
           return response.text();
         })
         .catch(_err => { throw this.serverErrorMessage; });
+    }
+
+    vacationsFactory(rawVacations) {
+        rawVacations.exp_dates.map((item) => {
+            item.par_days = item.days;
+            item.isAboutToExpire = (function() {
+                let today = new Date();
+                return today.DateAdd("m", 2).getTime() > (new Date(this.expirationDate)).getTime();
+            }).bind(item);
+            item.isExpired = (function(){
+                let today = new Date();
+                return today.getTime() > (new Date(this.expirationDate)).getTime();
+            }).bind(item);
+        });
+    
+        rawVacations.findFirstCycle = (function(condition){
+            return this.find(this.exp_dates, condition);
+        }).bind(rawVacations);
+
+        rawVacations.findLastCycle = (function(condition){
+            return this.find(this.exp_dates.slice().reverse(), condition);
+        }).bind(rawVacations);
+
+        rawVacations.find = function(cycles, condition) {
+            return cycles.find(
+                (item) => {
+                return !item.isExpired() && condition(item);
+            });
+        };
     }
 
 }
