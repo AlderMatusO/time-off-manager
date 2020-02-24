@@ -16,7 +16,8 @@ import {
   UPDATE_DRAWER_STATE,
   UPDATE_ACCORDION_STATE,
   SET_USER,
-  SET_ALERT
+  SET_ALERT,
+  SET_BANNER
 } from '../actions/app.js';
 
 const INITIAL_STATE = {
@@ -26,7 +27,8 @@ const INITIAL_STATE = {
   snackbarOpened: false,
   usrAccordionOpened: false,
   loggedUsr: null,
-  alert: null
+  alert: null,
+  banner: null
 };
 
 const app = (state = INITIAL_STATE, action) => {
@@ -70,6 +72,11 @@ const app = (state = INITIAL_STATE, action) => {
         return {
           ...state,
           alert: action.alert
+        };
+      case SET_BANNER:
+        return {
+          ...state,
+          banner: action.banner
         };
     default:
       return state;

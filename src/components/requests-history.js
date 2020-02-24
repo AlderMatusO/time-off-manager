@@ -23,7 +23,7 @@ class RequestsHistory extends connect(store)(PageViewElement) {
   static get properties() {
     return {
       // This is the data from the store.
-      requests: { type: Array },
+      requests: { type: Array, reflect: true },
       apiURI: { type: String },
       user: { type: Object },
       events_def: { type: Object },
@@ -41,7 +41,7 @@ class RequestsHistory extends connect(store)(PageViewElement) {
 
   constructor() {
     super();
-    this.requests = {list: []};
+    this.requests = [];
     this.events_def = {
       PTO: {color: "#00CFB5", min_date: "today", max_date:"31-December-9999", restrictWeekdays: true, validation: null, indicators: true, scope: this},
       Vacations: {color: "#FFDD30", min_date: "today", max_date:"31-December-9999", restrictWeekdays: true, validation: null, indicators: true, scope: this}
@@ -62,8 +62,7 @@ class RequestsHistory extends connect(store)(PageViewElement) {
       <section>
         <h3>Requests List</h3>
         <div class="container">
-        ${this.requests.list != null && this.requests.list.length > 0? html`
-          <div class="row">
+          <div class="row" class="row ${this.requests != null && this.requests.length > 0? '': 'd-none'}">
             <div class="col col-md">
               <table class="table table-sm table-borderless table-hover non-selectable">
                 <thead>
@@ -74,7 +73,7 @@ class RequestsHistory extends connect(store)(PageViewElement) {
                   </tr>
                 </thead>
                 <tbody>
-                  ${ this.requests.list.map((request, index) => html `
+                  ${ this.requests.map((request, index) => html `
                     <tr class="${ this.req_selected === index? "bg-info text-white" : "" }"
                       @tap="${ this._select }" id="${index}">
                       <th scope="row" class="cell">${request.status}</td>
@@ -89,11 +88,10 @@ class RequestsHistory extends connect(store)(PageViewElement) {
               <mte-calendar _readonly="true" style="max-width: 540px; display:${this.req_selected >= 0? "block" : "none"};" .evt_types="${this.events_def}"></mte-calendar>
             </div>
           </div>
-        `: html `
-          <div class="alert alert-primary" role="alert">
+          <div
+          class="alert alert-primary ${this.requests != null && this.requests.length > 0? 'd-none': 'd-block'}" role="alert">
             You have no requests to display.
-          </div>`
-        }
+          </div>
         </div>
       </section>
     `;
@@ -103,7 +101,8 @@ class RequestsHistory extends connect(store)(PageViewElement) {
   {
     if(this.user != null){
       try{
-        this.requests = await this.userService.getRequestsHistory(this.user.id);
+        let response =  await this.userService.getRequestsHistory(this.user.id);
+        this.setAttribute('requests', JSON.stringify(response.list));
         this.loadDatesOnCalendar(this.req_selected);
       }
       catch(err) {
@@ -114,7 +113,7 @@ class RequestsHistory extends connect(store)(PageViewElement) {
 
   stateChanged(state) {
     this.user = state.app.loggedUsr;
-    if(this.userService)
+    if(this.userService && JSON.stringify(this.user) !== JSON.stringify(state.app.loggedUsr))
       this.tryLoad();
   }
 
@@ -125,10 +124,11 @@ class RequestsHistory extends connect(store)(PageViewElement) {
   }
 
   loadDatesOnCalendar(index) {
-    if(this.requests.list.length == 0) return;
+    if(this.requests.length == 0) return;
+    if(this.calendar === null) return;
 
-    this.calendar.evt_types.PTO.dates = this.requests.list[index].ptoDates;
-    this.calendar.evt_types.Vacations.dates = this.requests.list[index].vacationDates;
+    this.calendar.evt_types.PTO.dates = this.requests[index].ptoDates;
+    this.calendar.evt_types.Vacations.dates = this.requests[index].vacationDates;
   }
 
 }

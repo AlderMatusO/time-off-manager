@@ -21,7 +21,7 @@ import '/node_modules/mte-calendar/mte-calendar.js';
 
 // These are the shared styles needed by this element.
 import { SharedStyles } from './shared-styles.js';
-import { setConfirm, setSuccess, setError } from '../actions/app.js';
+import { setConfirm, setSuccess, setError, setBanner } from '../actions/app.js';
 
 class RequestTimeOff extends connect(store)(PageViewElement) {
   static get styles() {
@@ -43,7 +43,7 @@ class RequestTimeOff extends connect(store)(PageViewElement) {
                 <div class="card-body">
                   <h5 class="card-title">${this.employee.name}</h5>
                   <h6 id="employee-position">${this.employee.position}</h6>
-                  <p class="card-text">According to our register your AVAILABLE days are:</p>
+                  <p class="card-text">According to our records your AVAILABLE days are:</p>
                   <h6>
                     <a href="#" @click="${ this._toggleDetails }">Vacations details
                       ${ this.showDetails? html `<span class="fa fa-chevron-up"></span>` : html `<span class="fa fa-chevron-down"></span>` }
@@ -184,8 +184,6 @@ class RequestTimeOff extends connect(store)(PageViewElement) {
     this.requestUpdate();
   }
 
-  
-
   _clearAll(e) {
     this.calendar.clearAll();
   }
@@ -227,29 +225,36 @@ class RequestTimeOff extends connect(store)(PageViewElement) {
   }
 
   validate_pto(_time, evts_obj) {
-    if(this.employee.availableDays.pto.number <= 0)
+    if(this.employee.availableDays.pto.number <= 0){
+      store.dispatch(setBanner("You ran out of PTO's."));
       return false;
+    }
 
     //PTO's cannot be consecutive to vacations and other PTO's. We add and substract a day to validate
     let cur_date = new Date(_time);
     if(evts_obj.PTO.includes(cur_date.DateAdd("d", 1).getTime()) ||
       evts_obj.PTO.includes(cur_date.DateAdd("d", -1).getTime()) ||
       evts_obj.Vacations.includes(cur_date.DateAdd("d", 1).getTime()) ||
-      evts_obj.Vacations.includes(cur_date.DateAdd("d", -1).getTime()))
+      evts_obj.Vacations.includes(cur_date.DateAdd("d", -1).getTime())) {
+      store.dispatch(setBanner("There's a PTO or a vacations besides the day you've picked."));
       return false;
+    }
 
     return true;
   }
 
   validate_vacation(_time, evts_obj) {
-    if(this.employee.availableDays.vacations.number <= 0)
+    if(this.employee.availableDays.vacations.number <= 0) {
+      store.dispatch(setBanner("You ran out of vacation days."));
       return false;
-
+    }
     //vacations cannot be consecutive to PTO's
     let cur_date = new Date(_time);
     if(evts_obj.PTO.includes(cur_date.DateAdd("d", 1).getTime()) ||
-      evts_obj.PTO.includes(cur_date.DateAdd("d", -1).getTime()))
+      evts_obj.PTO.includes(cur_date.DateAdd("d", -1).getTime())) {
+      store.dispatch(setBanner("There's a PTO besides the day you've picked."));
       return false;
+    }
     return true;
   }
 

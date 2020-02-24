@@ -16,6 +16,7 @@ export const OPEN_SNACKBAR = 'OPEN_SNACKBAR';
 export const CLOSE_SNACKBAR = 'CLOSE_SNACKBAR';
 export const SET_USER = 'SET_USER';
 export const SET_ALERT = 'SET_ALERT';
+export const SET_BANNER = 'SET_BANNER';
 
 export const navigate = (path) => (dispatch, getState) => {
   const state = getState();
@@ -95,25 +96,6 @@ export const updateAccordionState = (opened) => {
   };
 };
 
-export const checkForUser = (dispatch) => {
-  let user = JSON.parse(localStorage.getItem("user"));
-
-  if(user != null) {
-    // Also must check session's expiry
-    dispatch(setUser(user));
-  }
-
-};
-
-export const loginUser = (userId) => {
-
-  let user = null;
-
-  
-
-  
-};
-
 export const setUser = (user) => {
   localStorage.setItem("user", JSON.stringify(user));
   return {
@@ -171,5 +153,21 @@ export const clearAlert = () => {
     type: SET_ALERT,
     alert: null
   };
+};
+
+export const setBanner = (message) => {
+  return {
+    type: SET_BANNER,
+    banner: {
+      message: message
+    }
+  }
+};
+
+export const clearBanner = (message) => {
+  return {
+    type: SET_BANNER,
+    banner: null
+  }
 };
 

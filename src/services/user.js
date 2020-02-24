@@ -3,13 +3,13 @@ import { connect } from 'pwa-helpers/connect-mixin.js';
 import { store } from '../store.js';
 import { BaseService } from './base.js';
 import { StringFormat } from '../helpers/string-format.js';
+import { setUser } from '../actions/app.js';
 
 export class UserService extends connect(store)(BaseService) {
 
     constructor() {
         super();
         this.serverErrorMessage = "There was an error while retrieving the data from the server.";
-        this.loggedUsr = {};
         this.timeOffUrl = process.env.APIBASEURI + "requests";
         this.employeeDataUrl = process.env.APIBASEURI + "employees/{0}";
         this.employeeVacationDaysUrl = process.env.APIBASEURI + "employees/{0}/days";
@@ -17,8 +17,8 @@ export class UserService extends connect(store)(BaseService) {
     }
 
     async getEmployee( username ) {
-        let usr = await this.getUsersData( username );
-        if(!usr)
+        let user = await this.getUsersData( username );
+        if(!user)
             return false;
         
         let vacationsData = await this.getVacationsData( username );
@@ -26,13 +26,15 @@ export class UserService extends connect(store)(BaseService) {
         if(!vacationsData)
             return false;
 
-        usr.image = "images/unknown.png";
-        usr.availableDays.pto.active = true;
-        usr.availableDays.vacations.active = false;
-        usr.availableDays.vacations.exp_dates = vacationsData;
-        this.vacationsFactory(usr.availableDays.vacations);
+        user.image = "images/unknown.png";
+        user.availableDays.pto.active = true;
+        user.availableDays.vacations.active = false;
+        user.availableDays.vacations.exp_dates = vacationsData;
 
-        return usr;
+        this.vacationsFactory(user.availableDays.vacations);
+        store.dispatch(setUser(user));
+
+        return user;
     }
 
     getUsersData( userId ) {

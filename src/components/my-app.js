@@ -15,7 +15,7 @@ import { installMediaQueryWatcher } from 'pwa-helpers/media-query.js';
 import { installOfflineWatcher } from 'pwa-helpers/network.js';
 import { installRouter } from 'pwa-helpers/router.js';
 import { updateMetadata } from 'pwa-helpers/metadata.js';
-import { clearAlert } from '../actions/app.js';
+import { clearAlert, clearBanner } from '../actions/app.js';
 import { UserService } from '../services/user.js';
 import { AuthService, authService, userService } from '../services/auth.js';
 import '@polymer/iron-dropdown/iron-dropdown.js';
@@ -27,11 +27,11 @@ import { store } from '../store.js';
 
 // These are the actions needed by this element.
 import {
+  setUser,
   navigate,
   updateOffline,
   updateDrawerState,
-  updateAccordionState,
-  checkForUser,
+  updateAccordionState
 } from '../actions/app.js';
 
 // These are the elements needed by this element.
@@ -52,6 +52,7 @@ class MyApp extends connect(store)(LitElement) {
       _offline: { type: Boolean },
       _loggedUsr: { type: Object },
       _alert: { type: Object },
+      _banner: { type: Object },
       authService: { type: AuthService },
       userService: { type: UserService },
     };
@@ -237,7 +238,7 @@ class MyApp extends connect(store)(LitElement) {
           }
 
           .main-content {
-            padding-top: 55px;
+            padding-top: 10px;
           }
         }
       `
@@ -321,6 +322,9 @@ class MyApp extends connect(store)(LitElement) {
 
       <!-- Main content -->
       <main role="main" class="main-content">
+      ${ this._banner !== null?
+        html `<div class="alert alert-danger"><span class="fas fa-exclamation-triangle"></span>${ this._banner.message }</div>` : html ``}
+        
         <start-page class="page" ?active="${this._page === 'start-page'}" .authService="${this.authService}"></start-page>
         <request-time-off class="page" ?active="${this._page === 'request-time-off'}" .userService="${this.userService}"></request-time-off>
         <requests-history class="page" ?active="${this._page === 'requests-history'}" .userService="${this.userService}"></requests-history>
@@ -340,6 +344,7 @@ class MyApp extends connect(store)(LitElement) {
     setPassiveTouchGestures(true);
     this.authService = authService;
     this.userService = userService;
+    this._banner = null;
   }
 
   connectedCallback() {
@@ -347,7 +352,10 @@ class MyApp extends connect(store)(LitElement) {
   }
 
   firstUpdated() {
-    store.dispatch(checkForUser);
+    let user = authService.getLoggedUser();
+    if(user)
+      store.dispatch(setUser(user));
+    
     installRouter((location) => store.dispatch(navigate(decodeURIComponent(location.pathname))));
     installOfflineWatcher((offline) => store.dispatch(updateOffline(offline)));
     installMediaQueryWatcher(`(min-width: 460px)`,
@@ -377,7 +385,6 @@ class MyApp extends connect(store)(LitElement) {
       accordion.toggle();
       store.dispatch(updateAccordionState(!this._usrAccordionOpened));
     }
-    
   }
 
   _logOut() {
@@ -416,6 +423,17 @@ class MyApp extends connect(store)(LitElement) {
         
         if(this._alert.hasOwnProperty('postAlert'))
           alert.then( this._alert.postAlert );
+      }
+    }
+    
+    if(JSON.stringify(state.app.banner) != JSON.stringify(this._banner)) {
+      this._banner = state.app.banner;
+      if(this._banner != null) {
+        setTimeout(
+          (function() {
+            store.dispatch(clearBanner());
+          }).bind(this), 4000);
+        this.requestUpdate();
       }
     }
   }

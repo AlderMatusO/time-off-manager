@@ -64,10 +64,8 @@ export class AuthService extends connect(store)(BaseService) {
         }
         catch(err) {
             throw new AuthError("form", err);
-            return;
         };
-
-        store.dispatch(setUser(employee));
+        
         store.dispatch(navigate(decodeURIComponent("/index.html")));
     }
 
@@ -75,6 +73,15 @@ export class AuthService extends connect(store)(BaseService) {
         store.dispatch(setUser(null));
         store.dispatch(updateAccordionState(false));
         store.dispatch(navigate(decodeURIComponent("/")));
+    }
+
+    getLoggedUser() {
+        //Checks if the user is in localstorage
+        let user = JSON.parse(localStorage.getItem("user"));
+        if(user === null)
+            return false;
+        this.userService.vacationsFactory(user.availableDays.vacations);
+        return user;
     }
 }
 export class AuthError {
