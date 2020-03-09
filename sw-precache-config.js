@@ -18,23 +18,19 @@ module.exports = {
   runtimeCaching: [
     {
       urlPattern: /\/@webcomponents\/webcomponentsjs\//,
-      handler: 'fastest'
-    },
-    {
-      urlPattern: /^https:\/\/fonts.gstatic.com\//,
-      handler: 'fastest'
+      handler: 'cacheFirst'
     },
     {
       urlPattern: /\/bootstrap\/dist\/css\//,
-      handler: 'fastest'
+      handler: 'cacheFirst'
     },
     {
       urlPattern: /\/jquery\/dist\//,
-      handler: 'fastest'
+      handler: 'cacheFirst'
     },
     {
       urlPattern: /\/fonts\/font-awesome-4.7.0\//,
-      handler: 'fastest'
+      handler: 'cacheFirst'
     },
     {
       urlPattern: /\/images\/manifest\//,

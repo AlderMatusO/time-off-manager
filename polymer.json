@@ -8,6 +8,7 @@
   ],
   "extraDependencies": [
     "manifest.json",
+    "node_modules/mte-calendar/**.js",
     "node_modules/@webcomponents/webcomponentsjs/**",
     "node_modules/bootstrap/dist/css/**.css",
     "node_modules/jquery/dist/**.js",
@@ -71,11 +72,6 @@
       "bundle": true,
       "addServiceWorker": true,
       "autoBasePath": true
-    },
-    {
-      "name": "es6-prod",
-      "preset": "es6-bundled",
-      "addServiceWorker": true
     }
   ],
   "moduleResolution": "node",
