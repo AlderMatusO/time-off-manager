@@ -12,7 +12,7 @@ import { html } from 'lit-element';
 import { PageViewElement } from './page-view-element.js';
 import { connect } from 'pwa-helpers/connect-mixin.js';
 import { store } from '../store.js';
-import { formatDateArr } from '../helpers/date-arrays.js';
+import { formatDateArr, formatDate } from '../helpers/date-arrays.js';
 import { UserService } from '../services/user.js';
 import '@polymer/paper-card/paper-card.js';
 import '@polymer/paper-button/paper-button.js';
@@ -119,10 +119,14 @@ class RequestTimeOff extends connect(store)(PageViewElement) {
   constructor() {
     // Always call super() first
     super();
-
+    // let pto's be selected 5 bussiness days before today
+    let pto_min_date = (new Date()).DateAdd('w', -5);
+    let pto_max_date = (new Date()).DateAdd('y', 1);
+    let vac_min_date = (new Date()).DateAdd('w', 7);
+    let vac_max_date = (new Date()).DateAdd('y', 1);
     this.events_def = {
-      PTO: {color: "#00CFB5", min_date: "today", max_date:"29-Aug-2023", restrictWeekdays: true, validation: this.validate_pto.bind(this), indicators: false},
-      Vacations: {color: "#FFDD30", min_date: "today", max_date:"29-December-2023", restrictWeekdays: true, validation: this.validate_vacation.bind(this), indicators: false}
+      PTO: {color: "#00CFB5", min_date: formatDate(pto_min_date), max_date: formatDate(pto_max_date), restrictWeekdays: true, validation: this.validate_pto.bind(this), indicators: false},
+      Vacations: {color: "#FFDD30", min_date: formatDate(vac_min_date), max_date: formatDate(vac_max_date), restrictWeekdays: true, validation: this.validate_vacation.bind(this), indicators: false}
     };
     
     this.enable_submit = false;
@@ -227,16 +231,6 @@ class RequestTimeOff extends connect(store)(PageViewElement) {
   validate_pto(_time, evts_obj) {
     if(this.employee.availableDays.pto.number <= 0){
       store.dispatch(setBanner("You ran out of PTO's."));
-      return false;
-    }
-
-    //PTO's cannot be consecutive to vacations and other PTO's. We add and substract a day to validate
-    let cur_date = new Date(_time);
-    if(evts_obj.PTO.includes(cur_date.DateAdd("d", 1).getTime()) ||
-      evts_obj.PTO.includes(cur_date.DateAdd("d", -1).getTime()) ||
-      evts_obj.Vacations.includes(cur_date.DateAdd("d", 1).getTime()) ||
-      evts_obj.Vacations.includes(cur_date.DateAdd("d", -1).getTime())) {
-      store.dispatch(setBanner("There's a PTO or a vacations besides the day you've picked."));
       return false;
     }
 

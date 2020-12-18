@@ -12,24 +12,31 @@ export class UserService extends connect(store)(BaseService) {
         this.serverErrorMessage = "There was an error while retrieving the data from the server.";
         this.timeOffUrl = process.env.APIBASEURI + "requests";
         this.employeeDataUrl = process.env.APIBASEURI + "employees/{0}";
-        this.employeeVacationDaysUrl = process.env.APIBASEURI + "employees/{0}/days";
         this.employeeHistoryUrl = process.env.APIBASEURI + "requests/{0}";
     }
 
     async getEmployee( username ) {
-        let user = await this.getUsersData( username );
-        if(!user)
-            return false;
-        
-        let vacationsData = await this.getVacationsData( username );
-
-        if(!vacationsData)
+        let userData = await this.getUsersData( username );
+        if(!userData)
             return false;
 
+        let user = userData.employee;
         user.image = "images/unknown.png";
-        user.availableDays.pto.active = true;
-        user.availableDays.vacations.active = false;
-        user.availableDays.vacations.exp_dates = vacationsData;
+        user.availableDays = {
+            'pto': {
+                'par_days': userData.paidTimeOffDays,
+                'number': userData.paidTimeOffDays,
+                'active': true
+            },
+            'vacations': {
+                'number': 0,
+                'exp_dates': [
+                    userData.lastYearVacationDays,
+                    userData.currentYearVacationDays,
+                    userData.nextYearVacationDays
+                ]
+            }
+        };
 
         this.vacationsFactory(user.availableDays.vacations);
         store.dispatch(setUser(user));
@@ -47,19 +54,6 @@ export class UserService extends connect(store)(BaseService) {
         })
         .then(res => { return res.json() })
         .catch(err => { throw this.serverErrorMessage;});
-    }
-
-    getVacationsData( employeeId ) {
-        return fetch(StringFormat(this.employeeVacationDaysUrl, employeeId),
-        {
-            method: 'get',
-            headers: {
-                "Content-Type": "application/json"
-            }
-        })
-        .then(res => res.json() )
-        .then(data => data.vacations)
-        .catch( err => { throw this.serverErrorMessage; } );
     }
 
     getRequestsHistory( employeeId ) {
@@ -90,7 +84,8 @@ export class UserService extends connect(store)(BaseService) {
 
     vacationsFactory(rawVacations) {
         rawVacations.exp_dates.map((item) => {
-            item.par_days = item.days;
+            item.days = item.available;
+            item.par_days = item.available;
             item.isAboutToExpire = (function() {
                 let today = new Date();
                 return today.DateAdd("m", 2).getTime() > (new Date(this.expirationDate)).getTime();
@@ -99,7 +94,14 @@ export class UserService extends connect(store)(BaseService) {
                 let today = new Date();
                 return today.getTime() > (new Date(this.expirationDate)).getTime();
             }).bind(item);
+            delete item.available;
         });
+
+        
+        rawVacations.number = rawVacations.exp_dates
+        .filter((item) => !item.isExpired())
+        .map((item) => item.par_days)
+        .reduce((accum, item) => accum + item);
     
         rawVacations.findFirstCycle = (function(condition){
             return this.find(this.exp_dates, condition);

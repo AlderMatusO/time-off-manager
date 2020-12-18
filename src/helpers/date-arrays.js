@@ -75,3 +75,17 @@ export function formatDateArr( dates ) {
         result += ((result !== "")? ", " : "") + formatRange(range);
     return result;
 }
+
+/**
+ * 
+ * @param {Date} date
+ *
+ * Formats a date to DD mmm YYY
+ */
+
+export function formatDate( date ) {
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    let day = date.getDate().toString();
+    let month = months[date.getMonth()];
+    return day + '-' + month + '-' + date.getFullYear();
+}
